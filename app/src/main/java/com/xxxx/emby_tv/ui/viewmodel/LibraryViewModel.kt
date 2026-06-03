@@ -8,6 +8,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.xxxx.emby_tv.R
+import com.xxxx.emby_tv.data.local.PreferencesManager
 import com.xxxx.emby_tv.data.repository.EmbyRepository
 import com.xxxx.emby_tv.data.model.BaseItemDto
 import com.xxxx.emby_tv.util.ErrorHandler
@@ -17,6 +18,7 @@ import kotlinx.coroutines.withContext
 
 class LibraryViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = EmbyRepository.getInstance(application)
+    private val prefsManager = PreferencesManager(application)
 
     companion object {
         private const val TAG = "LibraryViewModel"
@@ -70,8 +72,8 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
     var currentType by mutableStateOf("")
         private set
 
-    var currentSortBy by mutableStateOf("SortName")
-    var currentSortOrder by mutableStateOf("Ascending")
+    var currentSortBy by mutableStateOf(prefsManager.librarySortBy)
+    var currentSortOrder by mutableStateOf(prefsManager.librarySortOrder)
     var currentFilter by mutableStateOf<String?>(null)
 
     fun loadItems(parentId: String, type: String) {
@@ -91,6 +93,8 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
         currentSortBy = sortBy
         currentSortOrder = sortOrder
         currentFilter = filter
+        prefsManager.librarySortBy = sortBy
+        prefsManager.librarySortOrder = sortOrder
         currentPage = 0
         hasMoreData = true
 

@@ -27,6 +27,16 @@ class PreferencesManager(context: Context) {
         get() = prefs.getBoolean(KEY_DISABLE_HEVC, false)
         set(value) = prefs.edit().putBoolean(KEY_DISABLE_HEVC, value).apply()
 
+    // === 排序设置 ===
+
+    var librarySortBy: String
+        get() = prefs.getString(KEY_LIBRARY_SORT_BY, "SortName") ?: "SortName"
+        set(value) = prefs.edit().putString(KEY_LIBRARY_SORT_BY, value).apply()
+
+    var librarySortOrder: String
+        get() = prefs.getString(KEY_LIBRARY_SORT_ORDER, "Ascending") ?: "Ascending"
+        set(value) = prefs.edit().putString(KEY_LIBRARY_SORT_ORDER, value).apply()
+
     // === 代理设置 ===
 
     var proxyEnabled: Boolean
@@ -156,6 +166,9 @@ class PreferencesManager(context: Context) {
     }
 
     companion object {
+        private const val KEY_LIBRARY_SORT_BY = "library_sort_by"
+        private const val KEY_LIBRARY_SORT_ORDER = "library_sort_order"
+
         private const val KEY_THEME_ID = "selected_theme_id"
         private const val KEY_PREFER_DIRECT_PLAY = "prefer_direct_play"
         private const val KEY_DISABLE_HEVC = "disable_hevc"
