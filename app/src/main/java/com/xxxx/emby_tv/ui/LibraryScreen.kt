@@ -47,6 +47,7 @@ fun LibraryScreen(
     val context = LocalContext.current
     val firstItemFocusRequester = remember { FocusRequester() }
     val gridState = rememberLazyGridState()
+    var isInitialScrollDone by remember(parentId) { mutableStateOf(false) }
 
     val repository = remember { EmbyRepository.getInstance(context) }
     val serverUrl = repository.serverUrl ?: ""
@@ -73,9 +74,10 @@ fun LibraryScreen(
     }
 
     LaunchedEffect(libraryItems) {
-        if (libraryItems != null && libraryItems.isNotEmpty()) {
+        if (libraryItems != null && libraryItems.isNotEmpty() && !isInitialScrollDone) {
             gridState.scrollToItem(0)
             firstItemFocusRequester.requestFocus()
+            isInitialScrollDone = true
         }
     }
 
