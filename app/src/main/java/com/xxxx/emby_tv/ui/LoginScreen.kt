@@ -70,7 +70,7 @@ fun LoginScreen(
     }
 
     // 在初始化时就解析 savedServerUrl
-    val initialParsed = remember { parseServerUrl(loginViewModel.savedServerUrl ?: "http://192.168.2.9:8096") }
+    val initialParsed = remember { parseServerUrl(loginViewModel.savedServerUrl) }
 
     // 从 ViewModel 获取保存的值
     var protocol by remember { mutableStateOf(initialParsed.first) }
