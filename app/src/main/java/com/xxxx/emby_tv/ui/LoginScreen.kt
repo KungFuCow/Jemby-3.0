@@ -76,8 +76,8 @@ fun LoginScreen(
     var protocol by remember { mutableStateOf(initialParsed.first) }
     var host by remember { mutableStateOf(initialParsed.second) }
     var port by remember { mutableStateOf(initialParsed.third) }
-    var username by remember { mutableStateOf(null?:loginViewModel.savedUsername) }
-    var password by remember { mutableStateOf("***REMOVED***"?:loginViewModel.savedPassword) }
+    var username by remember { mutableStateOf(loginViewModel.savedUsername) }
+    var password by remember { mutableStateOf(loginViewModel.savedPassword) }
 
     // Server & QR Code State
     var qrCodeBitmap by remember { mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null) }
