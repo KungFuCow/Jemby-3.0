@@ -26,8 +26,8 @@ android {
         applicationId = "com.xxxx.emby_tv"
         minSdk = 23
         targetSdk = 36
-        versionName = "2.0.22"
-         versionCode = 222
+        versionName = "2.0.23"
+         versionCode = 223
 //        versionCode = 92
 
     }
