@@ -26,7 +26,7 @@ jobs:
           java-version: '17'
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
-      # Verify the four separately configured GitHub Actions secrets before signing.
+      # Verify all four repository secrets for this signed-build retry.
       - name: Restore private signing certificate
         shell: bash
         env:
