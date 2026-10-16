@@ -28,9 +28,9 @@ import com.xxxx.emby_tv.ui.components.TopStatusBar
 import com.xxxx.emby_tv.ui.viewmodel.HomeViewModel
 import com.xxxx.emby_tv.ui.viewmodel.MainViewModel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.yield
 
 private var jembySplashShownInProcess = false
-import kotlinx.coroutines.yield
 
 
 @OptIn(ExperimentalTvMaterial3Api::class)
