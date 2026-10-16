@@ -27,7 +27,7 @@ android {
         minSdk = 23
         targetSdk = 36
         versionName = "3.0.0-test1"
-         versionCode = 300001
+         versionCode = System.getenv("JEMBY_BUILD_NUMBER")?.toIntOrNull() ?: 300001
 //        versionCode = 92
 
     }
@@ -42,17 +42,23 @@ android {
 
     // CI debug builds do not have the upstream project's private signing key.
     // Only configure release signing when all required values are available.
-    val hasReleaseKeystore = listOf(
-        "keyAlias", "keyPassword", "storeFile", "storePassword"
-    ).all { !keystoreProperties.getProperty(it).isNullOrBlank() }
+    val signingPath = System.getenv("JEMBY_SIGNING_FILE")
+    val signingAlias = System.getenv("JEMBY_KEY_ALIAS")
+    val signingPassword = System.getenv("JEMBY_STORE_PASSWORD")
+    val keyPassword = System.getenv("JEMBY_KEY_PASSWORD")
+    val hasReleaseKeystore = !signingPath.isNullOrBlank() &&
+        !signingAlias.isNullOrBlank() &&
+        !signingPassword.isNullOrBlank() &&
+        !keyPassword.isNullOrBlank() &&
+        file(signingPath).exists()
 
     if (hasReleaseKeystore) {
         signingConfigs {
             create("release") {
-                keyAlias = keystoreProperties.getProperty("keyAlias")
-                keyPassword = keystoreProperties.getProperty("keyPassword")
-                storeFile = file(keystoreProperties.getProperty("storeFile"))
-                storePassword = keystoreProperties.getProperty("storePassword")
+                keyAlias = signingAlias
+                this.keyPassword = keyPassword
+                storeFile = file(signingPath!!)
+                storePassword = signingPassword
             }
         }
     }
