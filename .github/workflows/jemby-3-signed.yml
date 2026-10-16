@@ -2,6 +2,11 @@ name: J'Emby 3.0 Signed Android TV APK
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - jemby-3-development
+    paths:
+      - .github/workflows/jemby-3-signed.yml
 
 permissions:
   contents: read
