@@ -20,6 +20,7 @@ import androidx.compose.ui.res.stringResource
 import com.xxxx.emby_tv.R
 import com.xxxx.emby_tv.data.repository.EmbyRepository
 import com.xxxx.emby_tv.ui.components.BuildItem
+import com.xxxx.emby_tv.ui.components.JembyLibrarySplash
 import com.xxxx.emby_tv.ui.components.Loading
 import com.xxxx.emby_tv.ui.components.MenuDialog
 import com.xxxx.emby_tv.ui.components.NoData
@@ -27,6 +28,8 @@ import com.xxxx.emby_tv.ui.components.TopStatusBar
 import com.xxxx.emby_tv.ui.viewmodel.HomeViewModel
 import com.xxxx.emby_tv.ui.viewmodel.MainViewModel
 import kotlinx.coroutines.delay
+
+private var jembySplashShownInProcess = false
 import kotlinx.coroutines.yield
 
 
@@ -122,6 +125,15 @@ fun HomeScreen(
         null
     }
 
+    var showJembySplash by remember { mutableStateOf(!jembySplashShownInProcess) }
+    LaunchedEffect(libraryLatestItems, resumeItems) {
+        if (showJembySplash && (libraryLatestItems != null || resumeItems != null)) {
+            delay(1200)
+            showJembySplash = false
+            jembySplashShownInProcess = true
+        }
+    }
+    Box(modifier = Modifier.fillMaxSize()) {
     Column(modifier = Modifier.fillMaxSize()) {
         // 顶部状态栏
         TopStatusBar(
@@ -228,6 +240,12 @@ fun HomeScreen(
                 }
             }
         }
+    }
+    if (showJembySplash) {
+        val art = libraryLatestItems.orEmpty().flatMap { it.latestItems.orEmpty() } +
+            resumeItems.orEmpty()
+        JembyLibrarySplash(serverUrl = serverUrl, artwork = art)
+    }
     }
 }
 
