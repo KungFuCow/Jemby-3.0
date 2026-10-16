@@ -9,8 +9,8 @@ import androidx.lifecycle.viewModelScope
 import com.xxxx.emby_tv.data.repository.EmbyRepository
 import com.xxxx.emby_tv.data.model.BaseItemDto
 import com.xxxx.emby_tv.util.ErrorHandler
-import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.CancellationException
 
 /**
  * 首页 ViewModel
@@ -56,28 +56,43 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
             isLoading = true
             errorMessage = null
 
-            try {
-                val resumeDeferred = async {
-                    try { repository.getResumeItems() }
-                    catch (e: Exception) { errorMessage = e.message; emptyList() }
+            // Show each section as soon as its request completes; don't hold
+            // Continue Watching behind slower libraries or favorites.
+            val resumeJob = launch {
+                try {
+                    resumeItems = repository.getResumeItems()
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    errorMessage = e.message
+                    resumeItems = emptyList()
                 }
-                val latestDeferred = async {
-                    try { repository.getLatestItems() }
-                    catch (e: Exception) { errorMessage = e.message; emptyList() }
+            }
+            val librariesJob = launch {
+                try {
+                    libraryLatestItems = repository.getLatestItems()
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    errorMessage = e.message
+                    libraryLatestItems = emptyList()
                 }
-                val favDeferred = async {
-                    try { repository.getFavoriteItems() }
-                    catch (e: Exception) { errorMessage = e.message; emptyList() }
+            }
+            val favoritesJob = launch {
+                try {
+                    favoriteItems = repository.getFavoriteItems()
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    errorMessage = e.message
+                    favoriteItems = emptyList()
                 }
+            }
 
-                resumeItems = resumeDeferred.await()
-                libraryLatestItems = latestDeferred.await()
-                favoriteItems = favDeferred.await()
-            } catch (e: Exception) {
-                if (errorMessage == null) errorMessage = e.message
-                resumeItems = emptyList()
-                libraryLatestItems = emptyList()
-                favoriteItems = emptyList()
+            try {
+                resumeJob.join()
+                librariesJob.join()
+                favoritesJob.join()
             } finally {
                 isLoading = false
             }
