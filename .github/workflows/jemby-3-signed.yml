@@ -7,6 +7,7 @@ on:
       - jemby-3-development
     paths:
       - .github/workflows/jemby-3-signed.yml
+      - app/src/main/**
 
 permissions:
   contents: read
