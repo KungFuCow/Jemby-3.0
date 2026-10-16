@@ -26,6 +26,7 @@ jobs:
           java-version: '17'
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
+      # Validate configured signing secrets before building the upgradeable APK.
       - name: Restore private signing certificate
         shell: bash
         env:
