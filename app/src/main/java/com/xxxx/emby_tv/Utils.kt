@@ -22,11 +22,11 @@ object Utils {
             // 优先使用父级的背景图 (Backdrop)
             if (item.parentBackdropItemId != null && !parentBackdropImageTags.isNullOrEmpty()) {
                 val tag = parentBackdropImageTags[0]
-                return "$serverUrl/emby/Items/${item.parentBackdropItemId}/Images/Backdrop?maxWidth=500&tag=$tag&quality=80"
+                return "$serverUrl/emby/Items/${item.parentBackdropItemId}/Images/Backdrop?maxWidth=480&tag=$tag&quality=75"
             }
             // 其次使用父级的缩略图 (Thumb)
             else if (item.parentThumbItemId != null) {
-                return "$serverUrl/emby/Items/${item.parentThumbItemId}/Images/Thumb?maxWidth=500&tag=${item.parentThumbImageTag}&quality=80"
+                return "$serverUrl/emby/Items/${item.parentThumbItemId}/Images/Thumb?maxWidth=480&tag=${item.parentThumbImageTag}&quality=75"
             }
             // 再次使用自己的缩略图 (Thumb)
             else if (imageTags?.containsKey("Thumb") == true) {
@@ -41,7 +41,7 @@ object Utils {
             if (imageTags?.containsKey("Primary") == true) itemId else item.parentPrimaryImageItemId
 
         if (!primaryTag.isNullOrEmpty() && !primaryId.isNullOrEmpty()) {
-            return "$serverUrl/emby/Items/$primaryId/Images/Primary?maxWidth=500&tag=$primaryTag&quality=80"
+            return "$serverUrl/emby/Items/$primaryId/Images/Primary?maxWidth=320&tag=$primaryTag&quality=75"
         }
 
         return ""
