@@ -45,8 +45,9 @@ jobs:
           JEMBY_STORE_PASSWORD: ${{ secrets.JEMBY_STORE_PASSWORD }}
           JEMBY_KEY_ALIAS: ${{ secrets.JEMBY_KEY_ALIAS }}
           JEMBY_KEY_PASSWORD: ${{ secrets.JEMBY_KEY_PASSWORD }}
-          JEMBY_BUILD_NUMBER: ${{ 300000 + github.run_number }}
-        run: bash ./gradlew --no-daemon :app:assembleRelease
+        run: |
+          export JEMBY_BUILD_NUMBER=$((300000 + GITHUB_RUN_NUMBER))
+          bash ./gradlew --no-daemon :app:assembleRelease
       - name: Package installable APK
         run: |
           mkdir -p dist
