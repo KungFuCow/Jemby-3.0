@@ -145,14 +145,16 @@ fun HomeScreen(
 //        if(isLoading){
 //            Loading()
 //        }
-        if (libraryLatestItems != null) {
+        if (libraryLatestItems != null || resumeItems != null || favoriteItems != null) {
             LazyColumn(
                 modifier = Modifier.weight(1f),
                 contentPadding = PaddingValues(bottom = 40.dp)
             ) {
-                // 我的媒体库
-                item {
-                    MediaSection(
+                // Show libraries only when loaded; don't hold the entire
+                // homepage behind the slowest Emby request.
+                if (libraryLatestItems != null) {
+                    item {
+                        MediaSection(
                         title = stringResource(R.string.my_libraries),
                         items = libraryLatestItems,
                         isMyLibrary = true,
@@ -165,7 +167,8 @@ fun HomeScreen(
                             navController.navigate("library/$id?libraryName=$title&type=$type")
                         },
                         onMenuPressed = { showMenu = true }
-                    )
+                        )
+                    }
                 }
 
                 // 继续观看
