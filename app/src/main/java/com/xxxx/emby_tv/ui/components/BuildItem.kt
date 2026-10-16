@@ -129,26 +129,13 @@ fun BuildItem(
             ) {
 
                 // 使用 Coil 加载图片
-                SubcomposeAsyncImage(
+                // AsyncImage avoids a separate composition per poster loading
+                // indicator. The parent Box supplies a cheap placeholder.
+                AsyncImage(
                     model = imageUrl,
                     contentDescription = null,
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop,
-                    loading = {
-                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            CircularProgressIndicator(color = primaryColor, strokeWidth = 2.dp, modifier = Modifier.size(24.dp))
-                        }
-                    },
-                    error = {
-                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Icon(
-                                imageVector = Icons.Default.Movie,
-                                contentDescription = null,
-                                tint = Color.Gray.copy(alpha = 0.5f),
-                                modifier = Modifier.size(40.dp)
-                            )
-                        }
-                    }
                 )
 
                 // 账号名称显示
