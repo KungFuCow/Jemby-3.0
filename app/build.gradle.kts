@@ -23,11 +23,11 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.xxxx.emby_tv"
+        applicationId = "com.jemby.tv3"
         minSdk = 23
         targetSdk = 36
-        versionName = "2.0.24"
-         versionCode = 224
+        versionName = "3.0.0-test1"
+         versionCode = 300001
 //        versionCode = 92
 
     }
