@@ -2,7 +2,6 @@ package com.xxxx.emby_tv.ui
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -29,6 +28,7 @@ import com.xxxx.emby_tv.ui.viewmodel.HomeViewModel
 import com.xxxx.emby_tv.ui.viewmodel.MainViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.yield
+import androidx.compose.foundation.lazy.items
 
 private var jembySplashShownInProcess = false
 
@@ -261,74 +261,45 @@ private fun MediaSection(
     onItemSelected: (BaseItemDto) -> Unit,
     onMenuPressed: () -> Unit,
 ) {
-    val maxLength = when {
-        isMyLibrary -> 194.dp
-        else -> 214.dp
-    }
-
-    val maxAspectRatio = items.mapNotNull {
-        val ratio = it.primaryImageAspectRatio?.toFloat()
-        if (ratio == null || ratio == 1.0f) null else ratio
-    }.maxOrNull() ?: 0.666f
-
-    val imgWidth = if (maxAspectRatio >= 1f) {
-        maxLength
-    } else {
-        (maxLength.value * maxAspectRatio).dp
-    }
-    val focusRequester = remember { FocusRequester() }
-
-    // 当继续观看的 items 变化时，重新聚焦到第一个项目
-    LaunchedEffect(Unit) {
-        if (isContinueWatching && items.isNotEmpty()) {
-            focusRequester.requestFocus()
-        }
-    }
-
-    Column {
+    // A portrait-first, vertically navigable poster grid. Landscape Continue
+    // Watching artwork stays 16:9, avoiding cropped episode thumbnails.
+    val posterWidth = if (isContinueWatching) 208.dp else 142.dp
+    val ratio = if (isContinueWatching) 16f / 9f else 2f / 3f
+    Column(modifier = Modifier.fillMaxWidth().padding(bottom = 26.dp)) {
         Text(
             text = title,
             color = Color.White,
-            fontSize = 32.sp,
+            fontSize = 27.sp,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(start = 32.dp, top = 20.dp, bottom = 16.dp)
+            modifier = Modifier.padding(start = 32.dp, top = 18.dp, bottom = 12.dp)
         )
-
         if (items.isEmpty()) {
-            NoData(modifier = Modifier.height(maxLength))
+            NoData(modifier = Modifier.height(120.dp))
         } else {
-            LazyRow(
-                contentPadding = PaddingValues(horizontal = 24.dp),
-                horizontalArrangement = Arrangement.spacedBy(20.dp)
-            ) {
-                itemsIndexed(
-                    items,
-                    key = { _, item -> item.id ?: item.hashCode() }
-                ) { index, item ->
-
-                    val modifier = if ((isContinueWatching) && index == 0) {
-                        Modifier.focusRequester(focusRequester)
-                    } else {
-                        Modifier
+            // Keeping each row in the parent LazyColumn makes D-pad up/down
+            // navigation natural; cap preview rows for large Emby libraries.
+            val columns = if (isContinueWatching) 5 else 7
+            items.take(if (isContinueWatching) 10 else 14)
+                .chunked(columns).forEach { rowItems ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 28.dp, vertical = 7.dp),
+                        horizontalArrangement = Arrangement.spacedBy(14.dp)
+                    ) {
+                        rowItems.forEach { item ->
+                            BuildItem(
+                                modifier = Modifier,
+                                item = item,
+                                aspectRatio = ratio,
+                                imgWidth = posterWidth,
+                                isShowImg17 = isContinueWatching,
+                                isMyLibrary = isMyLibrary,
+                                serverUrl = serverUrl,
+                                onItemClick = { onItemSelected(item) },
+                                onMenuClick = { onMenuPressed() }
+                            )
+                        }
                     }
-
-
-
-                    BuildItem(
-                        modifier = modifier,
-                        item = item,
-                        aspectRatio = maxAspectRatio,
-                        imgWidth = imgWidth,
-                        isShowImg17 = isShowImg17,
-                        isMyLibrary = isMyLibrary,
-                        serverUrl = serverUrl,
-                        onItemClick = { onItemSelected(item) },
-                        onMenuClick = { onMenuPressed() },
-                    )
                 }
-            }
         }
     }
-
-    Spacer(modifier = Modifier.height(32.dp))
 }
