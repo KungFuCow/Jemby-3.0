@@ -51,6 +51,7 @@ fun MenuDialog(
     onSearch: (() -> Unit)? = null,
     onPlaybackSettings: (() -> Unit)? = null,
     onProxySettings: (() -> Unit)? = null,
+    onHomeSettings: (() -> Unit)? = null,
     isShowLogout: Boolean = true
 ) {
     val showThemeSelection = remember { mutableStateOf(false) }
@@ -168,6 +169,17 @@ fun MenuDialog(
                                     text = stringResource(R.string.playback_settings),
                                     icon = Icons.Filled.PlayCircle,
                                     onClick = { onPlaybackSettings(); onDismiss() },
+                                    primaryColor = currentPrimaryColor
+                                )
+                            }
+                        }
+
+                        if (onHomeSettings != null) {
+                            menuItems.add {
+                                MenuListItem(
+                                    text = "Home screen settings",
+                                    icon = Icons.Filled.Settings,
+                                    onClick = { onHomeSettings(); onDismiss() },
                                     primaryColor = currentPrimaryColor
                                 )
                             }
