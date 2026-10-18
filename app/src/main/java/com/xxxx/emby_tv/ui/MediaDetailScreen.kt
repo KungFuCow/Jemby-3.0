@@ -60,6 +60,8 @@ fun MediaDetailScreen(
     
     val mediaInfo = detailViewModel.mediaInfo
     val playButtonFocusRequester = remember { FocusRequester() }
+    val seasonFocusRequester = remember { FocusRequester() }
+    val episodeFocusRequester = remember { FocusRequester() }
 
     // Series Data State
     var seasons by remember { mutableStateOf<List<BaseItemDto>?>(null) }
@@ -68,6 +70,7 @@ fun MediaDetailScreen(
     var isLoadingSeriesData by remember { mutableStateOf(false) }
     var selectedSeason by remember(seriesId) { mutableStateOf<BaseItemDto?>(null) }
     var highlightedSeasonId by remember(seriesId) { mutableStateOf<String?>(null) }
+    var lastEpisodeId by remember(seriesId) { mutableStateOf<String?>(null) }
     var isLoadingSeasonEpisodes by remember { mutableStateOf(false) }
 
     LaunchedEffect(seriesId) {
@@ -111,14 +114,21 @@ fun MediaDetailScreen(
         }
     }
 
-    // Default focus logic
-    LaunchedEffect(mediaInfo, isLoadingSeriesData) {
+    // Focus the actual navigation destination only after its controls exist.
+    // Never force focus back to Play while navigating seasons/episodes.
+    LaunchedEffect(mediaInfo?.id, seasons, selectedSeason?.id, episodes, isLoadingSeriesData) {
         if (mediaInfo != null && !isLoadingSeriesData) {
-            delay(200)
+            delay(120)
             try {
-                playButtonFocusRequester.requestFocus()
-            } catch (e: Exception) {
-                // Ignore if not attached
+                if (!mediaInfo.isSeries) {
+                    playButtonFocusRequester.requestFocus()
+                } else if (selectedSeason == null && !seasons.isNullOrEmpty()) {
+                    seasonFocusRequester.requestFocus()
+                } else if (selectedSeason != null && !episodes.isNullOrEmpty()) {
+                    episodeFocusRequester.requestFocus()
+                }
+            } catch (_: IllegalStateException) {
+                // Focus target may have been detached by a navigation transition.
             }
         }
     }
@@ -355,9 +365,12 @@ fun MediaDetailScreen(
                                     verticalArrangement = Arrangement.spacedBy(5.dp)
                                 ) {
                                     items(allSeasons, key = { it.id ?: it.hashCode() }) { season ->
+                                        val isRestoreTarget = season.id == (highlightedSeasonId ?: allSeasons.firstOrNull()?.id)
                                         Surface(
                                             onClick = { selectedSeason = season },
-                                            modifier = Modifier.fillMaxWidth().onFocusChanged {
+                                            modifier = Modifier.fillMaxWidth()
+                                                .then(if (isRestoreTarget) Modifier.focusRequester(seasonFocusRequester) else Modifier)
+                                                .onFocusChanged {
                                                 if (it.isFocused) highlightedSeasonId = season.id
                                             },
                                             shape = ClickableSurfaceDefaults.shape(shape = RoundedCornerShape(8.dp)),
@@ -420,9 +433,15 @@ fun MediaDetailScreen(
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 items(episodes.orEmpty(), key = { it.id ?: it.hashCode() }) { episode ->
+                                    val isRestoreEpisode = episode.id == (lastEpisodeId ?: episodes?.firstOrNull()?.id)
                                         Surface(
-                                            onClick = { onNavigateToPlayer(episode) },
-                                            modifier = Modifier.fillMaxWidth(),
+                                            onClick = {
+                                                lastEpisodeId = episode.id
+                                                onNavigateToPlayer(episode)
+                                            },
+                                            modifier = Modifier.fillMaxWidth()
+                                                .then(if (isRestoreEpisode) Modifier.focusRequester(episodeFocusRequester) else Modifier)
+                                                .onFocusChanged { if (it.isFocused) lastEpisodeId = episode.id },
                                             shape = ClickableSurfaceDefaults.shape(shape = RoundedCornerShape(8.dp)),
                                             colors = ClickableSurfaceDefaults.colors(
                                                 containerColor = Color(0x55111A26),
