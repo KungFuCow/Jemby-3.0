@@ -349,6 +349,12 @@ class EmbyRepository private constructor(private val context: Context) {
     /**
      * 添加收藏
      */
+    suspend fun setPlayed(itemId: String, played: Boolean): Boolean {
+        requireLoggedIn()
+        return EmbyApi.setPlayed(context, session.serverUrl!!, session.apiKey!!,
+            session.deviceId, session.userId!!, itemId, played)
+    }
+
     suspend fun addToFavorites(itemId: String): Boolean {
         requireLoggedIn()
         return EmbyApi.addToFavorites(
