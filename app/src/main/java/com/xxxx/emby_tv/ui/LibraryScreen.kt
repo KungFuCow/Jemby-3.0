@@ -25,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -69,6 +70,7 @@ fun LibraryScreen(
     val currentFilter = libraryViewModel.currentFilter
 
     var showSortDialog by remember { mutableStateOf(false) }
+    var selectedTitleId by remember { mutableStateOf<String?>(null) }
 
     val sortByLabel = stringResource(
         LibraryViewModel.SORT_OPTIONS.find { it.first == currentSortBy }?.second
@@ -241,98 +243,88 @@ fun LibraryScreen(
         } else {
             val items = libraryItems
 
-            // Vertical single-column list. Keep LazyVerticalGrid state for
-            // existing pagination and focus-restoration behavior.
-            val num = 1
-
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(num),
-                state = gridState,
-                contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp),
-                verticalArrangement = Arrangement.spacedBy(3.dp),
-                horizontalArrangement = Arrangement.spacedBy(0.dp),
-                modifier = Modifier.fillMaxSize()
-            ) {
-                items(items.size, key = { items[it].id ?: it.hashCode() }) { index ->
-                    val item = items[index]
-                    val id = item.id ?: ""
-                    if (id.isNotEmpty()) {
-                        val itemModifier = when {
-                            index == returnFocusIndex -> Modifier
-                                .fillMaxWidth()
-                                .focusRequester(returnFocusRequester)
-                            index == 0 -> Modifier
-                                .fillMaxWidth()
-                                .focusRequester(firstItemFocusRequester)
-                            else -> Modifier.fillMaxWidth()
-                        }
-                        // Compact TV list item: the whole entry is focused/clickable,
-                        // rather than a large poster card with text below it.
-                        Surface(
-                            onClick = {
-                                returnFocusIndex = index
-                                shouldFocusOnReturn = true
-                                onNavigateToSeries(id)
-                            },
-                            modifier = itemModifier.fillMaxWidth(),
-                            shape = ClickableSurfaceDefaults.shape(shape = RoundedCornerShape(10.dp)),
-                            colors = ClickableSurfaceDefaults.colors(
-                                containerColor = Color(0x55111A26),
-                                focusedContainerColor = MaterialTheme.colorScheme.secondary,
-                                contentColor = Color.White,
-                                focusedContentColor = Color.White
-                            )
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth().height(82.dp).padding(horizontal = 16.dp, vertical = 5.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(16.dp)
-                            ) {
-                                // Title is the primary navigation target, not the poster.
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = item.name ?: "Untitled",
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = Color.White,
-                                        maxLines = 2
-                                    )
-                                    item.productionYear?.let { year ->
-                                        Text(text = year.toString(), color = Color.LightGray)
-                                    }
-                                }
-                                AsyncImage(
-                                    model = Utils.getImageUrl(serverUrl, item, false),
-                                    contentDescription = null,
-                                    contentScale = ContentScale.Fit,
-                                    modifier = Modifier.width(42.dp).fillMaxHeight()
+            val selected = items.firstOrNull { it.id == selectedTitleId } ?: items.first()
+            Row(modifier = Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(1),
+                    state = gridState,
+                    contentPadding = PaddingValues(vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(3.dp),
+                    modifier = Modifier.weight(0.85f).fillMaxHeight()
+                ) {
+                    items(items.size, key = { items[it].id ?: it.toString() }) { index ->
+                        val item = items[index]
+                        val id = item.id ?: ""
+                        if (id.isNotEmpty()) {
+                            val requester = when {
+                                index == returnFocusIndex -> Modifier.focusRequester(returnFocusRequester)
+                                index == 0 -> Modifier.focusRequester(firstItemFocusRequester)
+                                else -> Modifier
+                            }
+                            Surface(
+                                onClick = {
+                                    selectedTitleId = id
+                                    returnFocusIndex = index
+                                    shouldFocusOnReturn = true
+                                    onNavigateToSeries(id)
+                                },
+                                modifier = requester.fillMaxWidth().onFocusChanged { state ->
+                                    if (state.isFocused) selectedTitleId = id
+                                },
+                                shape = ClickableSurfaceDefaults.shape(shape = RoundedCornerShape(7.dp)),
+                                colors = ClickableSurfaceDefaults.colors(
+                                    containerColor = Color.Transparent,
+                                    focusedContainerColor = MaterialTheme.colorScheme.secondary,
+                                    contentColor = Color.White,
+                                    focusedContentColor = Color.White
                                 )
+                            ) {
                                 Text(
-                                    text = item.overview?.takeIf { it.isNotBlank() } ?: "",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = Color.LightGray,
-                                    modifier = Modifier.weight(1.25f),
-                                    maxLines = 2
+                                    text = item.name ?: "Untitled",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    maxLines = 1,
+                                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 9.dp)
                                 )
                             }
                         }
                     }
-                }
-
-                if (isLoadingMore) {
-                    item {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
+                    if (isLoadingMore) {
+                        item {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(32.dp),
                                 color = Color.White,
                                 strokeWidth = 2.dp
                             )
                         }
+                    }
+                }
+                Row(
+                    modifier = Modifier.weight(1.4f).fillMaxHeight().padding(top = 12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(20.dp)
+                ) {
+                    AsyncImage(
+                        model = Utils.getImageUrl(serverUrl, selected, false),
+                        contentDescription = null,
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier.width(184.dp).height(276.dp)
+                    )
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = selected.name ?: "Untitled",
+                            style = MaterialTheme.typography.headlineSmall,
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold
+                        )
+                        selected.productionYear?.let { year ->
+                            Text(text = year.toString(), color = Color.LightGray)
+                        }
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = selected.overview?.takeIf { it.isNotBlank() }
+                                ?: "No synopsis available from Emby",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = Color.White
+                        )
                     }
                 }
             }
