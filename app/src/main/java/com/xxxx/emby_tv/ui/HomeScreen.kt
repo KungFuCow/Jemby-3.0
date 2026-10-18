@@ -190,14 +190,14 @@ fun HomeScreen(
 
     var showJembySplash by remember { mutableStateOf(!jembySplashShownInProcess) }
     var splashArtwork by remember { mutableStateOf<List<BaseItemDto>>(emptyList()) }
-    LaunchedEffect(libraryLatestItems, resumeItems) {
-        if (showJembySplash && (libraryLatestItems != null || resumeItems != null)) {
-            // Freeze poster set so arriving requests cannot shuffle the splash.
-            if (splashArtwork.isEmpty()) {
-                splashArtwork = (libraryLatestItems.orEmpty().flatMap { it.latestItems.orEmpty() }
-                    + resumeItems.orEmpty()).distinctBy { it.id }.take(18)
-            }
-            delay(3000)
+    LaunchedEffect(libraryLatestItems) {
+        if (showJembySplash && libraryLatestItems != null) {
+            // Wait for library artwork rather than flashing whichever API responds first.
+            splashArtwork = libraryLatestItems.flatMap { it.latestItems.orEmpty() }
+                .filter { !it.id.isNullOrBlank() }
+                .distinctBy { it.id }
+                .take(18)
+            delay(4000)
             showJembySplash = false
             jembySplashShownInProcess = true
         }
