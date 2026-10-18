@@ -350,11 +350,29 @@ fun MediaDetailScreen(
                                         focusedContentColor = Color.White
                                     )
                                 ) {
-                                    Text(
-                                        text = season.name ?: "Season",
-                                        style = MaterialTheme.typography.titleMedium,
-                                        modifier = Modifier.padding(horizontal = 18.dp, vertical = 14.dp)
-                                    )
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth()
+                                            .height(106.dp)
+                                            .padding(horizontal = 18.dp, vertical = 8.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                                    ) {
+                                        Text(
+                                            text = season.name ?: "Season",
+                                            style = MaterialTheme.typography.titleLarge,
+                                            color = Color.White,
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                        val seasonArtwork = Utils.getImageUrl(serverUrl, season, false)
+                                        if (seasonArtwork.isNotEmpty()) {
+                                            AsyncImage(
+                                                model = seasonArtwork,
+                                                contentDescription = "Artwork for ${season.name ?: "season"}",
+                                                contentScale = ContentScale.Fit,
+                                                modifier = Modifier.width(64.dp).fillMaxHeight()
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }
