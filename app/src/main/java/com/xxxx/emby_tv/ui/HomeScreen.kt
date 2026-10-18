@@ -193,10 +193,20 @@ fun HomeScreen(
     LaunchedEffect(libraryLatestItems) {
         if (showJembySplash && libraryLatestItems != null) {
             // Wait for library artwork rather than flashing whichever API responds first.
-            splashArtwork = libraryLatestItems.flatMap { it.latestItems.orEmpty() }
-                .filter { !it.id.isNullOrBlank() }
+            val candidates = (libraryLatestItems.flatMap { it.latestItems.orEmpty() }
+                + resumeItems.orEmpty()).filter { !it.id.isNullOrBlank() }
                 .distinctBy { it.id }
-                .take(18)
+            // Rotate between launches; store the previous collage IDs locally.
+            val splashPrefs = context.getSharedPreferences("jemby_splash", android.content.Context.MODE_PRIVATE)
+            val accountKey = repository.currentAccountId ?: "default"
+            val previous = splashPrefs.getString("previous_$accountKey", "")
+                .orEmpty().split(",").filter { it.isNotBlank() }.toSet()
+            val fresh = candidates.filter { it.id !in previous }.shuffled()
+            val remaining = candidates.filter { it.id in previous }.shuffled()
+            splashArtwork = (fresh + remaining).take(18)
+            splashPrefs.edit().putString(
+                "previous_$accountKey", splashArtwork.mapNotNull { it.id }.joinToString(",")
+            ).apply()
             delay(4000)
             showJembySplash = false
             jembySplashShownInProcess = true
