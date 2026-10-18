@@ -22,6 +22,16 @@ object ThemeColorManager {
     @Composable
     fun getThemeColors(context: Context) = listOf(
         ThemeColor(
+            id = "red_blue",
+            name = "Red / Blue Gradient",
+            primary = Color(0xFFD32F45),
+            primaryLight = Color(0xFFF06B7A),
+            primaryDark = Color(0xFF551321),
+            secondary = Color(0xFF328BEB),
+            secondaryLight = Color(0xFF23549B),
+            secondaryDark = Color(0xFF0C2347)
+        ),
+        ThemeColor(
             id = "rose",
             name = context.getString(com.xxxx.emby_tv.R.string.theme_color_rose),
             primary = Color(0xFFe91e63), // 玫瑰红
