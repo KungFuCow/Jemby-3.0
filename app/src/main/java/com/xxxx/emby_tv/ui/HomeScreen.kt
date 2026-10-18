@@ -113,15 +113,15 @@ fun HomeScreen(
             title = { androidx.compose.material3.Text("J'Emby Home Settings") },
             text = {
                 Column {
-                    HomeSettingToggle("Hide watched titles", homePrefs.hideWatched, homePrefs::setHideWatched)
-                    HomeSettingToggle("Show Continue Watching", homePrefs.showContinue, homePrefs::setShowContinue)
-                    HomeSettingToggle("Show Favorites", homePrefs.showFavorites, homePrefs::setShowFavorites)
-                    HomeSettingToggle("Show libraries", homePrefs.showLibraries, homePrefs::setShowLibraries)
+                    HomeSettingToggle("Hide watched titles", homePrefs.hideWatched, homePrefs::updateHideWatched)
+                    HomeSettingToggle("Show Continue Watching", homePrefs.showContinue, homePrefs::updateShowContinue)
+                    HomeSettingToggle("Show Favorites", homePrefs.showFavorites, homePrefs::updateShowFavorites)
+                    HomeSettingToggle("Show libraries", homePrefs.showLibraries, homePrefs::updateShowLibraries)
                     Spacer(Modifier.height(12.dp))
                     androidx.compose.material3.Text("Poster size")
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         listOf("small", "medium", "large").forEach { size ->
-                            androidx.compose.material3.Button(onClick = { homePrefs.setPosterSize(size) }) {
+                            androidx.compose.material3.Button(onClick = { homePrefs.updatePosterSize(size) }) {
                                 androidx.compose.material3.Text(if (homePrefs.posterSize == size) "Selected: " + size else size)
                             }
                         }
