@@ -248,8 +248,8 @@ fun LibraryScreen(
             LazyVerticalGrid(
                 columns = GridCells.Fixed(num),
                 state = gridState,
-                contentPadding = PaddingValues(24.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
+                contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(3.dp),
                 horizontalArrangement = Arrangement.spacedBy(0.dp),
                 modifier = Modifier.fillMaxSize()
             ) {
@@ -284,16 +284,16 @@ fun LibraryScreen(
                             )
                         ) {
                             Row(
-                                modifier = Modifier.fillMaxWidth().height(102.dp).padding(horizontal = 18.dp, vertical = 7.dp),
+                                modifier = Modifier.fillMaxWidth().height(82.dp).padding(horizontal = 16.dp, vertical = 5.dp),
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(22.dp)
+                                horizontalArrangement = Arrangement.spacedBy(16.dp)
                             ) {
                                 // Title is the primary navigation target, not the poster.
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
                                         text = item.name ?: "Untitled",
-                                        style = MaterialTheme.typography.titleLarge,
-                                        fontWeight = FontWeight.Bold,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.SemiBold,
                                         color = Color.White,
                                         maxLines = 2
                                     )
@@ -305,15 +305,14 @@ fun LibraryScreen(
                                     model = Utils.getImageUrl(serverUrl, item, false),
                                     contentDescription = null,
                                     contentScale = ContentScale.Fit,
-                                    modifier = Modifier.width(52.dp).fillMaxHeight()
+                                    modifier = Modifier.width(42.dp).fillMaxHeight()
                                 )
                                 Text(
-                                    text = item.overview?.takeIf { it.isNotBlank() }
-                                        ?: "No description available",
+                                    text = item.overview?.takeIf { it.isNotBlank() } ?: "",
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = Color.LightGray,
                                     modifier = Modifier.weight(1.25f),
-                                    maxLines = 3
+                                    maxLines = 2
                                 )
                             }
                         }
