@@ -48,11 +48,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     var updateLog by mutableStateOf("")
         private set
 
-    val needUpdate: Boolean
-        get() {
-            if (newVersion.isEmpty() || currentVersion.isEmpty()) return false
-            return newVersion != currentVersion
-        }
+    // Upstream OpenEmby release tags are not upgrades for the separately
+    // signed J'Emby application. Do not suggest installing their APK.
+    val needUpdate: Boolean get() = false
 
     init {
         loadThemeId()
@@ -109,6 +107,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
      * 检查更新
      */
     fun checkUpdate() {
+        // J'Emby has its own signing identity and release channel.
+        // Upstream OpenEmby APKs cannot upgrade this application safely.
+        return
+        @Suppress("UNREACHABLE_CODE")
         if (newVersion.isNotEmpty()) return
 
         viewModelScope.launch {
