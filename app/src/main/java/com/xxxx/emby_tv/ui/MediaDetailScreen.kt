@@ -7,6 +7,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.*
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import com.xxxx.emby_tv.data.model.BaseItemDto
 import com.xxxx.emby_tv.data.model.PersonInfo
@@ -42,6 +43,8 @@ import com.xxxx.emby_tv.data.repository.EmbyRepository
 import com.xxxx.emby_tv.ui.viewmodel.DetailViewModel
 import com.xxxx.emby_tv.util.ErrorHandler
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 
 @Composable
 fun MediaDetailScreen(
@@ -76,12 +79,12 @@ fun MediaDetailScreen(
         if (mediaInfo != null && mediaInfo.isSeries&&!isLoadingSeriesData) {
             isLoadingSeriesData = true
             try {
-                val seasonsList = detailViewModel.getSeasonList(seriesId)
-                val x = detailViewModel.getResumeItem(seriesId)
-
-                seasons = seasonsList
-                // Episode data is loaded only after choosing a season.
-                resume = x
+                coroutineScope {
+                    val seasonRequest = async { detailViewModel.getSeasonList(seriesId) }
+                    val resumeRequest = async { detailViewModel.getResumeItem(seriesId) }
+                    seasons = seasonRequest.await()
+                    resume = resumeRequest.await()
+                }
             } catch (e: Exception) {
                 ErrorHandler.logError("MediaDetailScreen", "加载数据失败", e)
             } finally {
@@ -392,8 +395,12 @@ fun MediaDetailScreen(
                         } else if (episodes.isNullOrEmpty()) {
                             Text(text = stringResource(R.string.no_episodes_found), color = Color.Gray)
                         } else {
-                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                episodes.orEmpty().forEach { episode ->
+                            // Lazy list avoids composing dozens of episode thumbnails up front.
+                            LazyColumn(
+                                modifier = Modifier.fillMaxWidth().height(440.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                items(episodes.orEmpty(), key = { it.id ?: it.hashCode() }) { episode ->
                                         Surface(
                                             onClick = { onNavigateToPlayer(episode) },
                                             modifier = Modifier.fillMaxWidth(),
