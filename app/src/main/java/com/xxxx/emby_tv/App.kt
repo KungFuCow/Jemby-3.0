@@ -5,6 +5,8 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.widget.Toast
+import coil3.disk.DiskCache
+import coil3.memory.MemoryCache
 import coil3.ImageLoader
 import coil3.SingletonImageLoader
 import coil3.network.okhttp.OkHttpNetworkFetcherFactory
@@ -38,6 +40,15 @@ class App : Application() {
 
         SingletonImageLoader.setSafe { context ->
             ImageLoader.Builder(context)
+                .memoryCache {
+                    MemoryCache.Builder().maxSizePercent(context, 0.20).build()
+                }
+                .diskCache {
+                    DiskCache.Builder()
+                        .directory(context.cacheDir.resolve("jemby_poster_cache"))
+                        .maxSizeBytes(512L * 1024L * 1024L)
+                        .build()
+                }
                 .components {
                     add(OkHttpNetworkFetcherFactory(callFactory = { HttpClient.getClient(context) }))
                 }
