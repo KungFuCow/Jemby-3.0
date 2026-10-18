@@ -22,11 +22,11 @@ class HomePreferences(context: Context) {
     var posterSize by mutableStateOf(prefs.getString("posterSize", "medium") ?: "medium")
         private set
 
-    fun setHideWatched(value: Boolean) { hideWatched = value; prefs.edit().putBoolean("hideWatched", value).apply() }
-    fun setShowContinue(value: Boolean) { showContinue = value; prefs.edit().putBoolean("showContinue", value).apply() }
-    fun setShowFavorites(value: Boolean) { showFavorites = value; prefs.edit().putBoolean("showFavorites", value).apply() }
-    fun setShowLibraries(value: Boolean) { showLibraries = value; prefs.edit().putBoolean("showLibraries", value).apply() }
-    fun setPosterSize(value: String) {
+    fun updateHideWatched(value: Boolean) { hideWatched = value; prefs.edit().putBoolean("hideWatched", value).apply() }
+    fun updateShowContinue(value: Boolean) { showContinue = value; prefs.edit().putBoolean("showContinue", value).apply() }
+    fun updateShowFavorites(value: Boolean) { showFavorites = value; prefs.edit().putBoolean("showFavorites", value).apply() }
+    fun updateShowLibraries(value: Boolean) { showLibraries = value; prefs.edit().putBoolean("showLibraries", value).apply() }
+    fun updatePosterSize(value: String) {
         if (value !in listOf("small", "medium", "large")) return
         posterSize = value
         prefs.edit().putString("posterSize", value).apply()
