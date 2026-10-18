@@ -43,6 +43,8 @@ fun HomeScreen(
 ) {
     val context = LocalContext.current
     var showMenu by remember { mutableStateOf(false) }
+    var showHomeSettings by remember { mutableStateOf(false) }
+    val homePrefs = remember(context) { HomePreferences(context) }
     var selectedItem by remember { mutableStateOf<BaseItemDto?>(null) }
 
     // 获取 serverUrl
@@ -97,9 +99,39 @@ fun HomeScreen(
                 showMenu = false
                 navController.navigate("playback_settings")
             },
+            onHomeSettings = { showMenu = false; showHomeSettings = true },
             onProxySettings = {
                 showMenu = false
                 navController.navigate("proxy_settings")
+            }
+        )
+    }
+
+    if (showHomeSettings) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { showHomeSettings = false },
+            title = { androidx.compose.material3.Text("J'Emby Home Settings") },
+            text = {
+                Column {
+                    HomeSettingToggle("Hide watched titles", homePrefs.hideWatched, homePrefs::setHideWatched)
+                    HomeSettingToggle("Show Continue Watching", homePrefs.showContinue, homePrefs::setShowContinue)
+                    HomeSettingToggle("Show Favorites", homePrefs.showFavorites, homePrefs::setShowFavorites)
+                    HomeSettingToggle("Show libraries", homePrefs.showLibraries, homePrefs::setShowLibraries)
+                    Spacer(Modifier.height(12.dp))
+                    androidx.compose.material3.Text("Poster size")
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        listOf("small", "medium", "large").forEach { size ->
+                            androidx.compose.material3.Button(onClick = { homePrefs.setPosterSize(size) }) {
+                                androidx.compose.material3.Text(if (homePrefs.posterSize == size) "Selected: " + size else size)
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                androidx.compose.material3.TextButton(onClick = { showHomeSettings = false }) {
+                    androidx.compose.material3.Text("Done")
+                }
             }
         )
     }
@@ -194,7 +226,7 @@ fun HomeScreen(
             ) {
                 // Show libraries only when loaded; don't hold the entire
                 // homepage behind the slowest Emby request.
-                if (libraryLatestItems != null) {
+                if (homePrefs.showLibraries && libraryLatestItems != null) {
                     item {
                         MediaSection(
                         title = stringResource(R.string.my_libraries),
@@ -208,13 +240,14 @@ fun HomeScreen(
                             val title = item.name ?: ""
                             navController.navigate("library/$id?libraryName=$title&type=$type")
                         },
-                        onMenuPressed = { selectedItem = it }
+                        onMenuPressed = { selectedItem = it },
+                        posterSize = homePrefs.posterSize
                         )
                     }
                 }
 
                 // 继续观看
-                if (resumeItems != null && resumeItems.isNotEmpty()) {
+                if (homePrefs.showContinue && resumeItems != null && resumeItems.isNotEmpty()) {
                     item {
                         MediaSection(
                             title = stringResource(R.string.continue_watching),
@@ -223,33 +256,37 @@ fun HomeScreen(
                             isContinueWatching = true,
                             serverUrl = serverUrl,
                             onItemSelected = { item -> goPlay(item) },
-                            onMenuPressed = { selectedItem = it }
+                            onMenuPressed = { selectedItem = it },
+                        posterSize = homePrefs.posterSize
                         )
                     }
                 }
 
                 // 收藏
-                if (favoriteItems != null && favoriteItems.isNotEmpty()) {
+                if (homePrefs.showFavorites && favoriteItems != null && favoriteItems.isNotEmpty()) {
                     item {
                         MediaSection(
                             title = stringResource(R.string.favorite),
-                            items = favoriteItems,
+                            items = if (homePrefs.hideWatched) favoriteItems.filter { it.userData?.played != true } else favoriteItems,
                             isShowImg17 = true,
                             serverUrl = serverUrl,
                             onItemSelected = { item -> goPlay(item) },
-                            onMenuPressed = { selectedItem = it }
+                            onMenuPressed = { selectedItem = it },
+                        posterSize = homePrefs.posterSize
                         )
                     }
                 }
 
                 // 各库最新内容
                 itemsIndexed(
-                    libraryLatestItems ?: emptyList(),
+                    if (homePrefs.showLibraries) libraryLatestItems ?: emptyList() else emptyList(),
                     key = { _, library -> library.id ?: library.hashCode() }
                 ) { _, library ->
                     MediaSection(
                         title = library.name ?: "",
-                        items = library.latestItems ?: emptyList(),
+                        items = (library.latestItems ?: emptyList()).let { latest ->
+                            if (homePrefs.hideWatched) latest.filter { it.userData?.played != true } else latest
+                        },
                         serverUrl = serverUrl,
                         onItemSelected = { item ->
                             if (item.isSeries) {
@@ -265,7 +302,8 @@ fun HomeScreen(
                                 goPlay(item)
                             }
                         },
-                        onMenuPressed = { selectedItem = it }
+                        onMenuPressed = { selectedItem = it },
+                        posterSize = homePrefs.posterSize
                     )
                 }
             }
@@ -290,10 +328,15 @@ private fun MediaSection(
     serverUrl: String,
     onItemSelected: (BaseItemDto) -> Unit,
     onMenuPressed: (BaseItemDto) -> Unit,
+    posterSize: String = "medium",
 ) {
     // A portrait-first, vertically navigable poster grid. Landscape Continue
     // Watching artwork stays 16:9, avoiding cropped episode thumbnails.
-    val posterWidth = if (isContinueWatching) 168.dp else 142.dp
+    val posterWidth = when (posterSize) {
+        "small" -> if (isContinueWatching) 138.dp else 112.dp
+        "large" -> if (isContinueWatching) 192.dp else 165.dp
+        else -> if (isContinueWatching) 168.dp else 142.dp
+    }
     val ratio = if (isContinueWatching) 16f / 9f else 2f / 3f
     Column(modifier = Modifier.fillMaxWidth().padding(bottom = 26.dp)) {
         Text(
@@ -308,7 +351,7 @@ private fun MediaSection(
         } else {
             // Keeping each row in the parent LazyColumn makes D-pad up/down
             // navigation natural; cap preview rows for large Emby libraries.
-            val columns = 5
+            val columns = if (posterSize == "large") 4 else if (posterSize == "small") 6 else 5
             items.take(10)
                 .chunked(columns).forEach { rowItems ->
                     Row(
@@ -331,5 +374,14 @@ private fun MediaSection(
                     }
                 }
         }
+    }
+}
+
+@Composable
+private fun HomeSettingToggle(label: String, checked: Boolean, onChange: (Boolean) -> Unit) {
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+        androidx.compose.material3.Text(label)
+        androidx.compose.material3.Switch(checked = checked, onCheckedChange = onChange)
     }
 }
