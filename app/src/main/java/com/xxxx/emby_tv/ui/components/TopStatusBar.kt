@@ -99,12 +99,8 @@ fun TopStatusBar(
                     Spacer(modifier = Modifier.width(8.dp))
                 }
 
-                Text(
-                    text ="OpenEmby TV "+ currentVersion,
-                    color = Color.White,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                // J'Emby home header intentionally omits the upstream
+                // OpenEmby version label; menu and actions remain accessible.
 
                 if (needUpdate) {
                     Text(
