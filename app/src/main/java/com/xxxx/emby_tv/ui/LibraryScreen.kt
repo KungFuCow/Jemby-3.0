@@ -1,6 +1,9 @@
 package com.xxxx.emby_tv.ui
 
 import com.xxxx.emby_tv.ui.components.BuildItem
+import coil3.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
+import com.xxxx.emby_tv.Utils
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
@@ -240,15 +243,13 @@ fun LibraryScreen(
 
             // Vertical single-column list. Keep LazyVerticalGrid state for
             // existing pagination and focus-restoration behavior.
-            val imgWidth = 136.dp
-            val maxAspectRatio = 2f / 3f
             val num = 1
 
             LazyVerticalGrid(
                 columns = GridCells.Fixed(num),
                 state = gridState,
                 contentPadding = PaddingValues(24.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
                 horizontalArrangement = Arrangement.spacedBy(0.dp),
                 modifier = Modifier.fillMaxSize()
             ) {
@@ -265,40 +266,52 @@ fun LibraryScreen(
                                 .focusRequester(firstItemFocusRequester)
                             else -> Modifier.fillMaxWidth()
                         }
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 5.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(22.dp)
-                        ) {
-                            BuildItem(
-                                item = item,
-                                imgWidth = imgWidth,
-                                aspectRatio = maxAspectRatio,
-                                modifier = itemModifier.width(imgWidth),
-                                isMyLibrary = false,
-                                serverUrl = serverUrl,
-                                onItemClick = {
-                                    returnFocusIndex = index
-                                    shouldFocusOnReturn = true
-                                    onNavigateToSeries(id)
-                                }
+                        // Compact TV list item: the whole entry is focused/clickable,
+                        // rather than a large poster card with text below it.
+                        Surface(
+                            onClick = {
+                                returnFocusIndex = index
+                                shouldFocusOnReturn = true
+                                onNavigateToSeries(id)
+                            },
+                            modifier = itemModifier.fillMaxWidth(),
+                            shape = ClickableSurfaceDefaults.shape(shape = RoundedCornerShape(10.dp)),
+                            colors = ClickableSurfaceDefaults.colors(
+                                containerColor = Color(0x55111A26),
+                                focusedContainerColor = MaterialTheme.colorScheme.secondary,
+                                contentColor = Color.White,
+                                focusedContentColor = Color.White
                             )
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = item.name ?: "Untitled",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = Color.White
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth().height(112.dp).padding(8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                            ) {
+                                AsyncImage(
+                                    model = Utils.getImageUrl(serverUrl, item, false),
+                                    contentDescription = null,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.width(62.dp).fillMaxHeight()
                                 )
-                                item.productionYear?.let { year ->
-                                    Text(text = year.toString(), color = Color.LightGray)
-                                }
-                                item.overview?.takeIf { it.isNotBlank() }?.let { overview ->
+                                Column(modifier = Modifier.weight(1f)) {
                                     Text(
-                                        text = overview,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = Color.LightGray,
-                                        maxLines = 3
+                                        text = item.name ?: "Untitled",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = Color.White,
+                                        maxLines = 1
                                     )
+                                    item.productionYear?.let { year ->
+                                        Text(text = year.toString(), color = Color.LightGray)
+                                    }
+                                    item.overview?.takeIf { it.isNotBlank() }?.let { overview ->
+                                        Text(
+                                            text = overview,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = Color.LightGray,
+                                            maxLines = 2
+                                        )
+                                    }
                                 }
                             }
                         }
