@@ -293,7 +293,7 @@ private fun MediaSection(
 ) {
     // A portrait-first, vertically navigable poster grid. Landscape Continue
     // Watching artwork stays 16:9, avoiding cropped episode thumbnails.
-    val posterWidth = if (isContinueWatching) 208.dp else 142.dp
+    val posterWidth = if (isContinueWatching) 168.dp else 142.dp
     val ratio = if (isContinueWatching) 16f / 9f else 2f / 3f
     Column(modifier = Modifier.fillMaxWidth().padding(bottom = 26.dp)) {
         Text(
