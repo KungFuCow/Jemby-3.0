@@ -107,34 +107,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
      * 检查更新
      */
     fun checkUpdate() {
-        // J'Emby has its own signing identity and release channel.
-        // Upstream OpenEmby APKs cannot upgrade this application safely.
-        return
-        @Suppress("UNREACHABLE_CODE")
-        if (newVersion.isNotEmpty()) return
-
-        viewModelScope.launch {
-            try {
-                val context = getApplication<Application>().applicationContext
-                val res = withContext(Dispatchers.IO) {
-                    EmbyApi.getNewVersion(context)
-                }
-
-                val tagName = res.safeGetString("tag_name") ?: ""
-                val body = res.safeGetString("body") ?: ""
-                val assets = res["assets"]?.asJsonArray
-
-                if (assets != null && assets.size() > 0) {
-                    downloadUrl = assets[0].asJsonObject.safeGetString("browser_download_url") ?: ""
-                }
-
-                newVersion = tagName
-                updateLog = body
-
-            } catch (e: Exception) {
-                ErrorHandler.logError("MainViewModel", "操作失败", e)
-            }
-        }
+        // Reserved for a future J'Emby-specific update feed.
+        // OpenEmby releases are a different Android package and signing identity.
     }
 
     /**
