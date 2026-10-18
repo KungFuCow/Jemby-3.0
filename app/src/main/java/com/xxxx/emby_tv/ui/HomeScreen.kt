@@ -43,6 +43,7 @@ fun HomeScreen(
 ) {
     val context = LocalContext.current
     var showMenu by remember { mutableStateOf(false) }
+    var selectedItem by remember { mutableStateOf<BaseItemDto?>(null) }
 
     // 获取 serverUrl
     val repository = remember { EmbyRepository.getInstance(context) }
@@ -108,6 +109,35 @@ fun HomeScreen(
         val userData = item.userData
         val position = userData?.playbackPositionTicks ?: 0L
         navController.navigate("player/$id?position=$position")
+    }
+
+    if (selectedItem != null) {
+        val item = selectedItem!!
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { selectedItem = null },
+            title = { androidx.compose.material3.Text(item.name ?: "Item actions") },
+            text = {
+                Column {
+                    androidx.compose.material3.TextButton(onClick = {
+                        item.id?.let { homeViewModel.updatePlayed(it, true) }
+                        selectedItem = null
+                    }) { androidx.compose.material3.Text("Mark as played") }
+                    androidx.compose.material3.TextButton(onClick = {
+                        item.id?.let { homeViewModel.updatePlayed(it, false) }
+                        selectedItem = null
+                    }) { androidx.compose.material3.Text("Mark as unplayed") }
+                    androidx.compose.material3.TextButton(onClick = {
+                        item.id?.let { homeViewModel.updatePlayed(it, true) }
+                        selectedItem = null
+                    }) { androidx.compose.material3.Text("Remove from Continue Watching (mark played)") }
+                }
+            },
+            confirmButton = {
+                androidx.compose.material3.TextButton(onClick = { selectedItem = null }) {
+                    androidx.compose.material3.Text("Close")
+                }
+            }
+        )
     }
 
     // Calculate User Info
@@ -178,7 +208,7 @@ fun HomeScreen(
                             val title = item.name ?: ""
                             navController.navigate("library/$id?libraryName=$title&type=$type")
                         },
-                        onMenuPressed = { showMenu = true }
+                        onMenuPressed = { selectedItem = it }
                         )
                     }
                 }
@@ -193,7 +223,7 @@ fun HomeScreen(
                             isContinueWatching = true,
                             serverUrl = serverUrl,
                             onItemSelected = { item -> goPlay(item) },
-                            onMenuPressed = { showMenu = true }
+                            onMenuPressed = { selectedItem = it }
                         )
                     }
                 }
@@ -207,7 +237,7 @@ fun HomeScreen(
                             isShowImg17 = true,
                             serverUrl = serverUrl,
                             onItemSelected = { item -> goPlay(item) },
-                            onMenuPressed = { showMenu = true }
+                            onMenuPressed = { selectedItem = it }
                         )
                     }
                 }
@@ -235,7 +265,7 @@ fun HomeScreen(
                                 goPlay(item)
                             }
                         },
-                        onMenuPressed = { showMenu = true }
+                        onMenuPressed = { selectedItem = it }
                     )
                 }
             }
@@ -259,7 +289,7 @@ private fun MediaSection(
     isContinueWatching: Boolean = false,
     serverUrl: String,
     onItemSelected: (BaseItemDto) -> Unit,
-    onMenuPressed: () -> Unit,
+    onMenuPressed: (BaseItemDto) -> Unit,
 ) {
     // A portrait-first, vertically navigable poster grid. Landscape Continue
     // Watching artwork stays 16:9, avoiding cropped episode thumbnails.
@@ -278,8 +308,8 @@ private fun MediaSection(
         } else {
             // Keeping each row in the parent LazyColumn makes D-pad up/down
             // navigation natural; cap preview rows for large Emby libraries.
-            val columns = if (isContinueWatching) 5 else 7
-            items.take(if (isContinueWatching) 10 else 14)
+            val columns = 5
+            items.take(10)
                 .chunked(columns).forEach { rowItems ->
                     Row(
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 28.dp, vertical = 7.dp),
@@ -295,7 +325,7 @@ private fun MediaSection(
                                 isMyLibrary = isMyLibrary,
                                 serverUrl = serverUrl,
                                 onItemClick = { onItemSelected(item) },
-                                onMenuClick = { onMenuPressed() }
+                                onMenuClick = { onMenuPressed(item) }
                             )
                         }
                     }
