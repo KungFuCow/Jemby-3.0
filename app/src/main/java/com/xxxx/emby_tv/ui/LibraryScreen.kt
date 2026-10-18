@@ -75,7 +75,7 @@ fun LibraryScreen(
     val currentFilter = libraryViewModel.currentFilter
 
     var showSortDialog by remember { mutableStateOf(false) }
-    var selectedTitleId by remember { mutableStateOf<String?>(null) }
+    var selectedTitleId by rememberSaveable(parentId) { mutableStateOf<String?>(null) }
 
     val sortByLabel = stringResource(
         LibraryViewModel.SORT_OPTIONS.find { it.first == currentSortBy }?.second
@@ -91,6 +91,7 @@ fun LibraryScreen(
         if (libraryItems != null && libraryItems.isNotEmpty()) {
             if (!isInitialScrollDone) {
                 gridState.scrollToItem(0)
+                withFrameNanos { }
                 firstItemFocusRequester.requestFocus()
                 isInitialScrollDone = true
             } else if (shouldFocusOnReturn && returnFocusIndex >= 0) {
@@ -287,7 +288,10 @@ fun LibraryScreen(
                                     onNavigateToSeries(id)
                                 },
                                 modifier = requester.fillMaxWidth().onFocusChanged { state ->
-                                    if (state.isFocused) selectedTitleId = id
+                                    if (state.isFocused) {
+                                        selectedTitleId = id
+                                        returnFocusIndex = index
+                                    }
                                 },
                                 shape = ClickableSurfaceDefaults.shape(shape = RoundedCornerShape(7.dp)),
                                 colors = ClickableSurfaceDefaults.colors(
