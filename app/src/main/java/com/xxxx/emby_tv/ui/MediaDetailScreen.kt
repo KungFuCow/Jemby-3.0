@@ -328,34 +328,58 @@ fun MediaDetailScreen(
                                 )
                             )
 
-                            // 该季的剧集 LazyRow
+                            // Kodi-style vertical episode entries under each season.
                             if (seasonEpisodes.isNotEmpty()) {
-                                val maxLength = 220.dp
-                                val aspectRatios =
-                                    seasonEpisodes.mapNotNull { it.primaryImageAspectRatio?.toFloat() }
-                                val maxAspectRatio = aspectRatios.maxOrNull() ?: 1.77f
-
-                                val imgWidth = if (maxAspectRatio >= 1f) {
-                                    maxLength
-                                } else {
-                                    (maxLength.value * maxAspectRatio).dp
-                                }
-
-                                LazyRow(
-                                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                                    contentPadding = PaddingValues(horizontal = 32.dp)
+                                Column(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
-                                    items(seasonEpisodes, key = { it.id ?: it.hashCode() }) { episode ->
-                                        BuildItem(
-                                            item = episode,
-                                            imgWidth = imgWidth,
-                                            aspectRatio = maxAspectRatio,
-                                            modifier = Modifier,
-                                            isMyLibrary = false,
-                                            isShowOverview = true,
-                                            serverUrl = serverUrl,
-                                            onItemClick = { onNavigateToPlayer(episode) }
-                                        )
+                                    seasonEpisodes.forEach { episode ->
+                                        Surface(
+                                            onClick = { onNavigateToPlayer(episode) },
+                                            modifier = Modifier.fillMaxWidth(),
+                                            shape = ClickableSurfaceDefaults.shape(shape = RoundedCornerShape(8.dp)),
+                                            colors = ClickableSurfaceDefaults.colors(
+                                                containerColor = Color(0x55111A26),
+                                                focusedContainerColor = MaterialTheme.colorScheme.secondary,
+                                                contentColor = Color.White,
+                                                focusedContentColor = Color.White
+                                            )
+                                        ) {
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth().heightIn(min = 76.dp)
+                                                    .padding(horizontal = 12.dp, vertical = 7.dp),
+                                                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Text(
+                                                    text = episode.indexNumber?.let { "E$it" } ?: "Episode",
+                                                    modifier = Modifier.width(62.dp),
+                                                    color = Color.White
+                                                )
+                                                AsyncImage(
+                                                    model = Utils.getImageUrl(serverUrl, episode, true),
+                                                    contentDescription = null,
+                                                    contentScale = ContentScale.Crop,
+                                                    modifier = Modifier.width(112.dp).height(64.dp)
+                                                )
+                                                Column(modifier = Modifier.weight(1f)) {
+                                                    Text(
+                                                        text = episode.name ?: "Episode",
+                                                        color = Color.White,
+                                                        fontWeight = FontWeight.SemiBold
+                                                    )
+                                                    episode.overview?.takeIf { it.isNotBlank() }?.let {
+                                                        Text(
+                                                            text = it,
+                                                            color = Color.LightGray,
+                                                            maxLines = 2,
+                                                            style = MaterialTheme.typography.bodySmall
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                             } else {
