@@ -284,35 +284,37 @@ fun LibraryScreen(
                             )
                         ) {
                             Row(
-                                modifier = Modifier.fillMaxWidth().height(112.dp).padding(8.dp),
+                                modifier = Modifier.fillMaxWidth().height(102.dp).padding(horizontal = 18.dp, vertical = 7.dp),
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                                horizontalArrangement = Arrangement.spacedBy(22.dp)
                             ) {
-                                AsyncImage(
-                                    model = Utils.getImageUrl(serverUrl, item, false),
-                                    contentDescription = null,
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier.width(62.dp).fillMaxHeight()
-                                )
+                                // Title is the primary navigation target, not the poster.
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
                                         text = item.name ?: "Untitled",
-                                        style = MaterialTheme.typography.titleMedium,
+                                        style = MaterialTheme.typography.titleLarge,
+                                        fontWeight = FontWeight.Bold,
                                         color = Color.White,
-                                        maxLines = 1
+                                        maxLines = 2
                                     )
                                     item.productionYear?.let { year ->
                                         Text(text = year.toString(), color = Color.LightGray)
                                     }
-                                    item.overview?.takeIf { it.isNotBlank() }?.let { overview ->
-                                        Text(
-                                            text = overview,
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = Color.LightGray,
-                                            maxLines = 2
-                                        )
-                                    }
                                 }
+                                AsyncImage(
+                                    model = Utils.getImageUrl(serverUrl, item, false),
+                                    contentDescription = null,
+                                    contentScale = ContentScale.Fit,
+                                    modifier = Modifier.width(52.dp).fillMaxHeight()
+                                )
+                                Text(
+                                    text = item.overview?.takeIf { it.isNotBlank() }
+                                        ?: "No description available",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = Color.LightGray,
+                                    modifier = Modifier.weight(1.25f),
+                                    maxLines = 3
+                                )
                             }
                         }
                     }
