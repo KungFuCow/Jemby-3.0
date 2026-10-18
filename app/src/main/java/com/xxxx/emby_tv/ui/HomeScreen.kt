@@ -188,9 +188,15 @@ fun HomeScreen(
     }
 
     var showJembySplash by remember { mutableStateOf(!jembySplashShownInProcess) }
+    var splashArtwork by remember { mutableStateOf<List<BaseItemDto>>(emptyList()) }
     LaunchedEffect(libraryLatestItems, resumeItems) {
         if (showJembySplash && (libraryLatestItems != null || resumeItems != null)) {
-            delay(1200)
+            // Freeze poster set so arriving requests cannot shuffle the splash.
+            if (splashArtwork.isEmpty()) {
+                splashArtwork = (libraryLatestItems.orEmpty().flatMap { it.latestItems.orEmpty() }
+                    + resumeItems.orEmpty()).distinctBy { it.id }.take(18)
+            }
+            delay(3000)
             showJembySplash = false
             jembySplashShownInProcess = true
         }
@@ -310,9 +316,7 @@ fun HomeScreen(
         }
     }
     if (showJembySplash) {
-        val art = libraryLatestItems.orEmpty().flatMap { it.latestItems.orEmpty() } +
-            resumeItems.orEmpty()
-        JembyLibrarySplash(serverUrl = serverUrl, artwork = art)
+        JembyLibrarySplash(serverUrl = serverUrl, artwork = splashArtwork)
     }
     }
 }
