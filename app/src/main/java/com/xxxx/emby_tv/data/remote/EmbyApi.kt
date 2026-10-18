@@ -446,6 +446,22 @@ object EmbyApi {
     /**
      * 添加收藏
      */
+    /** Emby playstate endpoints. Clearing a resume entry is done by marking played. */
+    suspend fun setPlayed(
+        context: Context, serverUrl: String, apiKey: String,
+        deviceId: String, userId: String, itemId: String, played: Boolean
+    ): Boolean {
+        return try {
+            val url = if (played) "/Users/$userId/PlayedItems/$itemId?X-Emby-Token=$apiKey"
+                      else "/Users/$userId/PlayedItems/$itemId/Delete?X-Emby-Token=$apiKey"
+            httpAsJsonObject(context, serverUrl, apiKey, deviceId, url, "POST", null)
+            true
+        } catch (e: Exception) {
+            ErrorHandler.logError("EmbyApi", "Unable to change played status", e)
+            false
+        }
+    }
+
     suspend fun addToFavorites(
         context: Context,
         serverUrl: String,
