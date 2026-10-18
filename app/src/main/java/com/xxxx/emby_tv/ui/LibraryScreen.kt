@@ -238,32 +238,18 @@ fun LibraryScreen(
         } else {
             val items = libraryItems
 
-            val maxLength = 220.dp
-
-            val (aspectRatioOver1List, aspectRatioUnder1List) = items
-                .mapNotNull { it.primaryImageAspectRatio?.toFloat() }
-                .partition { it > 1.0f }
-
-            val maxAspectRatio = if (aspectRatioOver1List.size >= aspectRatioUnder1List.size) {
-                aspectRatioOver1List.maxOrNull() ?: 1.777f
-            } else {
-                aspectRatioUnder1List.maxOrNull() ?: 0.666f
-            }
-
-            val imgWidth = if (maxAspectRatio >= 1.0f) {
-                maxLength
-            } else {
-                maxLength * maxAspectRatio
-            }
-
-            val num = if (maxAspectRatio > 1.0f) 4 else 6
+            // Vertical single-column list. Keep LazyVerticalGrid state for
+            // existing pagination and focus-restoration behavior.
+            val imgWidth = 136.dp
+            val maxAspectRatio = 2f / 3f
+            val num = 1
 
             LazyVerticalGrid(
                 columns = GridCells.Fixed(num),
                 state = gridState,
                 contentPadding = PaddingValues(24.dp),
-                verticalArrangement = Arrangement.spacedBy(22.dp),
-                horizontalArrangement = Arrangement.spacedBy(22.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp),
+                horizontalArrangement = Arrangement.spacedBy(0.dp),
                 modifier = Modifier.fillMaxSize()
             ) {
                 items(items.size, key = { items[it].id ?: it.hashCode() }) { index ->
@@ -279,14 +265,16 @@ fun LibraryScreen(
                                 .focusRequester(firstItemFocusRequester)
                             else -> Modifier.fillMaxWidth()
                         }
-                        Column(
-                            modifier = Modifier.fillMaxWidth()
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 5.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(22.dp)
                         ) {
                             BuildItem(
                                 item = item,
                                 imgWidth = imgWidth,
                                 aspectRatio = maxAspectRatio,
-                                modifier = itemModifier,
+                                modifier = itemModifier.width(imgWidth),
                                 isMyLibrary = false,
                                 serverUrl = serverUrl,
                                 onItemClick = {
@@ -295,6 +283,24 @@ fun LibraryScreen(
                                     onNavigateToSeries(id)
                                 }
                             )
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = item.name ?: "Untitled",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = Color.White
+                                )
+                                item.productionYear?.let { year ->
+                                    Text(text = year.toString(), color = Color.LightGray)
+                                }
+                                item.overview?.takeIf { it.isNotBlank() }?.let { overview ->
+                                    Text(
+                                        text = overview,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = Color.LightGray,
+                                        maxLines = 3
+                                    )
+                                }
+                            }
                         }
                     }
                 }
