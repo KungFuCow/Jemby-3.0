@@ -24,6 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.graphics.Brush
@@ -66,6 +67,7 @@ fun MediaDetailScreen(
     var resume by remember { mutableStateOf<BaseItemDto?>(null) }
     var isLoadingSeriesData by remember { mutableStateOf(false) }
     var selectedSeason by remember(seriesId) { mutableStateOf<BaseItemDto?>(null) }
+    var highlightedSeasonId by remember(seriesId) { mutableStateOf<String?>(null) }
     var isLoadingSeasonEpisodes by remember { mutableStateOf(false) }
 
     LaunchedEffect(seriesId) {
@@ -334,49 +336,66 @@ fun MediaDetailScreen(
                 // Two-step browsing: fetch season metadata first, episodes on selection.
                 if (mediaInfo.isSeries && !seasons.isNullOrEmpty()) {
                     if (selectedSeason == null) {
-                        Text(
-                            text = "Seasons",
-                            style = MaterialTheme.typography.headlineSmall,
-                            color = Color.White
-                        )
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            seasons.orEmpty().forEach { season ->
-                                Surface(
-                                    onClick = { selectedSeason = season },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    shape = ClickableSurfaceDefaults.shape(shape = RoundedCornerShape(8.dp)),
-                                    colors = ClickableSurfaceDefaults.colors(
-                                        containerColor = Color(0x55111A26),
-                                        focusedContainerColor = MaterialTheme.colorScheme.secondary,
-                                        contentColor = Color.White,
-                                        focusedContentColor = Color.White
-                                    )
+                        val allSeasons = seasons.orEmpty()
+                        val highlighted = allSeasons.firstOrNull { it.id == highlightedSeasonId }
+                            ?: allSeasons.firstOrNull()
+                        Row(
+                            modifier = Modifier.fillMaxWidth().height(460.dp),
+                            horizontalArrangement = Arrangement.spacedBy(32.dp)
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Seasons",
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    color = Color.White
+                                )
+                                Spacer(modifier = Modifier.height(12.dp))
+                                LazyColumn(
+                                    modifier = Modifier.fillMaxWidth().weight(1f),
+                                    verticalArrangement = Arrangement.spacedBy(5.dp)
                                 ) {
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth()
-                                            .height(106.dp)
-                                            .padding(horizontal = 18.dp, vertical = 8.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(16.dp)
-                                    ) {
-                                        Text(
-                                            text = season.name ?: "Season",
-                                            style = MaterialTheme.typography.titleLarge,
-                                            color = Color.White,
-                                            modifier = Modifier.weight(1f)
-                                        )
-                                        val seasonArtwork = Utils.getImageUrl(serverUrl, season, false)
-                                        if (seasonArtwork.isNotEmpty()) {
-                                            AsyncImage(
-                                                model = seasonArtwork,
-                                                contentDescription = "Artwork for ${season.name ?: "season"}",
-                                                contentScale = ContentScale.Fit,
-                                                modifier = Modifier.width(64.dp).fillMaxHeight()
+                                    items(allSeasons, key = { it.id ?: it.hashCode() }) { season ->
+                                        Surface(
+                                            onClick = { selectedSeason = season },
+                                            modifier = Modifier.fillMaxWidth().onFocusChanged {
+                                                if (it.isFocused) highlightedSeasonId = season.id
+                                            },
+                                            shape = ClickableSurfaceDefaults.shape(shape = RoundedCornerShape(8.dp)),
+                                            colors = ClickableSurfaceDefaults.colors(
+                                                containerColor = Color(0x55111A26),
+                                                focusedContainerColor = MaterialTheme.colorScheme.secondary,
+                                                contentColor = Color.White,
+                                                focusedContentColor = Color.White
+                                            )
+                                        ) {
+                                            Text(
+                                                text = season.name ?: "Season",
+                                                style = MaterialTheme.typography.titleMedium,
+                                                modifier = Modifier.padding(horizontal = 18.dp, vertical = 12.dp)
                                             )
                                         }
                                     }
                                 }
+                            }
+                            Column(
+                                modifier = Modifier.weight(1f),
+                                horizontalAlignment = Alignment.End
+                            ) {
+                                val artwork = highlighted?.let { Utils.getImageUrl(serverUrl, it, false) }.orEmpty()
+                                if (artwork.isNotEmpty()) {
+                                    AsyncImage(
+                                        model = artwork,
+                                        contentDescription = highlighted?.name,
+                                        contentScale = ContentScale.Fit,
+                                        modifier = Modifier.width(204.dp).height(306.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = highlighted?.name ?: "",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = Color.White
+                                )
                             }
                         }
                     } else {
