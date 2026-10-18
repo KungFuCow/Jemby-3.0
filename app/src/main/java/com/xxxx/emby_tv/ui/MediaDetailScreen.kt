@@ -62,6 +62,8 @@ fun MediaDetailScreen(
     var episodes by remember { mutableStateOf<List<BaseItemDto>?>(null) }
     var resume by remember { mutableStateOf<BaseItemDto?>(null) }
     var isLoadingSeriesData by remember { mutableStateOf(false) }
+    var selectedSeason by remember(seriesId) { mutableStateOf<BaseItemDto?>(null) }
+    var isLoadingSeasonEpisodes by remember { mutableStateOf(false) }
 
     LaunchedEffect(seriesId) {
         detailViewModel.loadMediaInfo(seriesId)
@@ -75,16 +77,31 @@ fun MediaDetailScreen(
             isLoadingSeriesData = true
             try {
                 val seasonsList = detailViewModel.getSeasonList(seriesId)
-                val episodesList = detailViewModel.getSeriesList(seriesId)
                 val x = detailViewModel.getResumeItem(seriesId)
 
                 seasons = seasonsList
-                episodes = episodesList
+                // Episode data is loaded only after choosing a season.
                 resume = x
             } catch (e: Exception) {
                 ErrorHandler.logError("MediaDetailScreen", "加载数据失败", e)
             } finally {
                 isLoadingSeriesData = false
+            }
+        }
+    }
+
+    LaunchedEffect(selectedSeason?.id) {
+        val seasonId = selectedSeason?.id
+        episodes = null
+        if (!seasonId.isNullOrBlank()) {
+            isLoadingSeasonEpisodes = true
+            try {
+                episodes = detailViewModel.getSeriesList(seasonId)
+            } catch (e: Exception) {
+                ErrorHandler.logError("MediaDetailScreen", "Season loading failed", e)
+                episodes = emptyList()
+            } finally {
+                isLoadingSeasonEpisodes = false
             }
         }
     }
@@ -230,7 +247,7 @@ fun MediaDetailScreen(
                                     val currentResume = resume
                                     if (currentResume != null) {
                                         onNavigateToPlayer(currentResume)
-                                    } else if (!seasons.isNullOrEmpty() && !episodes.isNullOrEmpty()) {
+                                    } else if (selectedSeason != null && !episodes.isNullOrEmpty()) {
                                         onNavigateToPlayer(episodes!!.first())
                                     }
                                 } else {
@@ -311,30 +328,54 @@ fun MediaDetailScreen(
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                // Seasons & Episodes Section
+                // Two-step browsing: fetch season metadata first, episodes on selection.
                 if (mediaInfo.isSeries && !seasons.isNullOrEmpty()) {
-                    val noEpisodesText = stringResource(R.string.no_episodes_found)
-                    Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
-                        seasons?.forEach { season ->
-                            val seasonName = season.name ?: ""
-                            val seasonEpisodes = episodes?.filter { it.seasonName == seasonName } ?: emptyList()
-
-                            // Season 标题 (普通 Text)
-                            Text(
-                                text = seasonName,
-                                style = MaterialTheme.typography.titleLarge.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White
-                                )
-                            )
-
-                            // Kodi-style vertical episode entries under each season.
-                            if (seasonEpisodes.isNotEmpty()) {
-                                Column(
+                    if (selectedSeason == null) {
+                        Text(
+                            text = "Seasons",
+                            style = MaterialTheme.typography.headlineSmall,
+                            color = Color.White
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            seasons.orEmpty().forEach { season ->
+                                Surface(
+                                    onClick = { selectedSeason = season },
                                     modifier = Modifier.fillMaxWidth(),
-                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                    shape = ClickableSurfaceDefaults.shape(shape = RoundedCornerShape(8.dp)),
+                                    colors = ClickableSurfaceDefaults.colors(
+                                        containerColor = Color(0x55111A26),
+                                        focusedContainerColor = MaterialTheme.colorScheme.secondary,
+                                        contentColor = Color.White,
+                                        focusedContentColor = Color.White
+                                    )
                                 ) {
-                                    seasonEpisodes.forEach { episode ->
+                                    Text(
+                                        text = season.name ?: "Season",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        modifier = Modifier.padding(horizontal = 18.dp, vertical = 14.dp)
+                                    )
+                                }
+                            }
+                        }
+                    } else {
+                        Button(onClick = { selectedSeason = null }) {
+                            Text("‹ All seasons")
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = selectedSeason?.name ?: "Episodes",
+                            style = MaterialTheme.typography.headlineSmall,
+                            color = Color.White
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        if (isLoadingSeasonEpisodes || episodes == null) {
+                            CircularProgressIndicator(color = Color.White)
+                        } else if (episodes.isNullOrEmpty()) {
+                            Text(text = stringResource(R.string.no_episodes_found), color = Color.Gray)
+                        } else {
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                episodes.orEmpty().forEach { episode ->
                                         Surface(
                                             onClick = { onNavigateToPlayer(episode) },
                                             modifier = Modifier.fillMaxWidth(),
@@ -380,10 +421,7 @@ fun MediaDetailScreen(
                                                 }
                                             }
                                         }
-                                    }
                                 }
-                            } else {
-                                Text(text = noEpisodesText, color = Color.Gray)
                             }
                         }
                     }
