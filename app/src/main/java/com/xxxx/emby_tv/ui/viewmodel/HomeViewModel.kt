@@ -123,6 +123,17 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun updatePlayed(itemId: String, played: Boolean) {
+        viewModelScope.launch {
+            if (repository.setPlayed(itemId, played)) {
+                // Re-fetch server-authoritative status and Continue Watching.
+                loadData()
+            } else {
+                errorMessage = "Could not update watched status"
+            }
+        }
+    }
+
     fun clearError() {
         errorMessage = null
     }
