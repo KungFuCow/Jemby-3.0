@@ -125,7 +125,7 @@ object EmbyApi {
         filters: String? = null
     ): Pair<List<BaseItemDto>, Int> {
         val url = "/Users/$userId/Items?IncludeItemTypes=$type" +
-                "&Fields=BasicSyncInfo,PrimaryImageAspectRatio,ProductionYear,Status,EndDate" +
+                "&Fields=BasicSyncInfo,PrimaryImageAspectRatio,ProductionYear,Overview,Status,EndDate" +
                 "&StartIndex=$startIndex&SortBy=$sortBy&SortOrder=$sortOrder&ParentId=$parentId" +
                 (filters?.let { "&Filters=$it" } ?: "") +
                 "&EnableImageTypes=Primary,Backdrop,Thumb&ImageTypeLimit=1&Recursive=true&Limit=$limit" +
