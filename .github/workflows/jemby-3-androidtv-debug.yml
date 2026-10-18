@@ -1,9 +1,6 @@
 name: J'Emby 3.0 Android TV Test APK
 
 on:
-  push:
-    branches:
-      - jemby-3-development
   workflow_dispatch:
 
 permissions:
