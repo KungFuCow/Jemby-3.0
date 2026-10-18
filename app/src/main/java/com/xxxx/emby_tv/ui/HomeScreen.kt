@@ -2,6 +2,7 @@ package com.xxxx.emby_tv.ui
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -353,30 +354,27 @@ private fun MediaSection(
         if (items.isEmpty()) {
             NoData(modifier = Modifier.height(120.dp))
         } else {
-            // Keeping each row in the parent LazyColumn makes D-pad up/down
-            // navigation natural; cap preview rows for large Emby libraries.
-            val columns = if (posterSize == "large") 4 else if (posterSize == "small") 6 else 5
-            items.take(10)
-                .chunked(columns).forEach { rowItems ->
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 28.dp, vertical = 7.dp),
-                        horizontalArrangement = Arrangement.spacedBy(14.dp)
-                    ) {
-                        rowItems.forEach { item ->
-                            BuildItem(
-                                modifier = Modifier,
-                                item = item,
-                                aspectRatio = ratio,
-                                imgWidth = posterWidth,
-                                isShowImg17 = isContinueWatching,
-                                isMyLibrary = isMyLibrary,
-                                serverUrl = serverUrl,
-                                onItemClick = { onItemSelected(item) },
-                                onMenuClick = { onMenuPressed(item) }
-                            )
-                        }
-                    }
+            // Single, lazy horizontal strip per section; no truncation to ten.
+            LazyRow(
+                modifier = Modifier.fillMaxWidth(),
+                contentPadding = PaddingValues(horizontal = 28.dp, vertical = 7.dp),
+                horizontalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                items(items.size, key = { index -> items[index].id ?: index.toString() }) { index ->
+                    val item = items[index]
+                    BuildItem(
+                        modifier = Modifier,
+                        item = item,
+                        aspectRatio = ratio,
+                        imgWidth = posterWidth,
+                        isShowImg17 = isContinueWatching,
+                        isMyLibrary = isMyLibrary,
+                        serverUrl = serverUrl,
+                        onItemClick = { onItemSelected(item) },
+                        onMenuClick = { onMenuPressed(item) }
+                    )
                 }
+            }
         }
     }
 }
