@@ -8,6 +8,7 @@ import androidx.compose.ui.unit.dp
 import androidx.tv.material3.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.items
 import com.xxxx.emby_tv.data.model.BaseItemDto
 import com.xxxx.emby_tv.data.model.PersonInfo
@@ -62,6 +63,9 @@ fun MediaDetailScreen(
     val playButtonFocusRequester = remember { FocusRequester() }
     val seasonFocusRequester = remember { FocusRequester() }
     val episodeFocusRequester = remember { FocusRequester() }
+    val seasonsListState = rememberLazyListState()
+    val episodesListState = rememberLazyListState()
+    var focusDestination by remember(seriesId) { mutableStateOf("seasons") }
 
     // Series Data State
     var seasons by remember { mutableStateOf<List<BaseItemDto>?>(null) }
@@ -116,16 +120,28 @@ fun MediaDetailScreen(
 
     // Focus the actual navigation destination only after its controls exist.
     // Never force focus back to Play while navigating seasons/episodes.
-    LaunchedEffect(mediaInfo?.id, seasons, selectedSeason?.id, episodes, isLoadingSeriesData) {
+    LaunchedEffect(mediaInfo?.id, seasons, selectedSeason?.id, episodes, isLoadingSeriesData, focusDestination) {
         if (mediaInfo != null && !isLoadingSeriesData) {
-            delay(120)
             try {
                 if (!mediaInfo.isSeries) {
+                    delay(120)
                     playButtonFocusRequester.requestFocus()
-                } else if (selectedSeason == null && !seasons.isNullOrEmpty()) {
+                } else if (selectedSeason == null && !seasons.isNullOrEmpty() && focusDestination == "seasons") {
+                    val target = seasons.orEmpty().indexOfFirst { it.id == highlightedSeasonId }
+                        .coerceAtLeast(0)
+                    seasonsListState.scrollToItem(target)
+                    withFrameNanos { }
+                    delay(90)
                     seasonFocusRequester.requestFocus()
-                } else if (selectedSeason != null && !episodes.isNullOrEmpty()) {
+                    focusDestination = "settled"
+                } else if (selectedSeason != null && !episodes.isNullOrEmpty() && focusDestination == "episodes") {
+                    val target = episodes.orEmpty().indexOfFirst { it.id == lastEpisodeId }
+                        .coerceAtLeast(0)
+                    episodesListState.scrollToItem(target)
+                    withFrameNanos { }
+                    delay(90)
                     episodeFocusRequester.requestFocus()
+                    focusDestination = "settled"
                 }
             } catch (_: IllegalStateException) {
                 // Focus target may have been detached by a navigation transition.
@@ -362,12 +378,18 @@ fun MediaDetailScreen(
                                 Spacer(modifier = Modifier.height(12.dp))
                                 LazyColumn(
                                     modifier = Modifier.fillMaxWidth().weight(1f),
+                                    state = seasonsListState,
                                     verticalArrangement = Arrangement.spacedBy(5.dp)
                                 ) {
                                     items(allSeasons, key = { it.id ?: it.hashCode() }) { season ->
                                         val isRestoreTarget = season.id == (highlightedSeasonId ?: allSeasons.firstOrNull()?.id)
                                         Surface(
-                                            onClick = { selectedSeason = season },
+                                            onClick = {
+                                                highlightedSeasonId = season.id
+                                                lastEpisodeId = null
+                                                focusDestination = "episodes"
+                                                selectedSeason = season
+                                            },
                                             modifier = Modifier.fillMaxWidth()
                                                 .then(if (isRestoreTarget) Modifier.focusRequester(seasonFocusRequester) else Modifier)
                                                 .onFocusChanged {
@@ -412,7 +434,10 @@ fun MediaDetailScreen(
                             }
                         }
                     } else {
-                        Button(onClick = { selectedSeason = null }) {
+                        Button(onClick = {
+                            focusDestination = "seasons"
+                            selectedSeason = null
+                        }) {
                             Text("‹ All seasons")
                         }
                         Spacer(modifier = Modifier.height(12.dp))
@@ -430,6 +455,7 @@ fun MediaDetailScreen(
                             // Lazy list avoids composing dozens of episode thumbnails up front.
                             LazyColumn(
                                 modifier = Modifier.fillMaxWidth().height(440.dp),
+                                state = episodesListState,
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 items(episodes.orEmpty(), key = { it.id ?: it.hashCode() }) { episode ->
