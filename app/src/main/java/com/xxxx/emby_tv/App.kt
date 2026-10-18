@@ -6,6 +6,7 @@ import android.os.Looper
 import android.util.Log
 import android.widget.Toast
 import coil3.disk.DiskCache
+import okio.Path.Companion.toOkioPath
 import coil3.memory.MemoryCache
 import coil3.ImageLoader
 import coil3.SingletonImageLoader
@@ -45,7 +46,7 @@ class App : Application() {
                 }
                 .diskCache {
                     DiskCache.Builder()
-                        .directory(context.cacheDir.resolve("jemby_poster_cache"))
+                        .directory(context.cacheDir.resolve("jemby_poster_cache").toOkioPath())
                         .maxSizeBytes(512L * 1024L * 1024L)
                         .build()
                 }
