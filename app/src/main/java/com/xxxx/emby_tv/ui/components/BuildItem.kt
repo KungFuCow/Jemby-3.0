@@ -41,6 +41,9 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.input.key.nativeKeyEvent
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.unit.Dp
 
 import com.xxxx.emby_tv.R
@@ -63,6 +66,7 @@ fun BuildItem(
     onItemClick: () -> Unit,
     onMenuClick: (() -> Unit)? = null,
 ) {
+    val longPressTriggered = remember(item.id) { mutableStateOf(false) }
     val primaryColor = MaterialTheme.colorScheme.secondary
     val isSeries = item.isSeries
     val userData = item.userData
@@ -102,7 +106,19 @@ fun BuildItem(
             // .clickable(interactionSource = null, onClick = onItemClick)
             .wrapContentHeight()
             .onKeyEvent { keyEvent ->
-                if (onMenuClick != null && keyEvent.type == KeyEventType.KeyDown) {
+                if (onMenuClick != null && keyEvent.key == Key.DirectionCenter) {
+                    if (keyEvent.type == KeyEventType.KeyDown &&
+                        keyEvent.nativeKeyEvent.repeatCount >= 5 &&
+                        !longPressTriggered.value) {
+                        longPressTriggered.value = true
+                        onMenuClick()
+                        true
+                    } else if (keyEvent.type == KeyEventType.KeyUp) {
+                        val consumed = longPressTriggered.value
+                        longPressTriggered.value = false
+                        consumed
+                    } else false
+                } else if (onMenuClick != null && keyEvent.type == KeyEventType.KeyDown) {
                     when (keyEvent.key) {
                         Key.Menu -> {
                             onMenuClick()
