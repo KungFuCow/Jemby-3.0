@@ -2,6 +2,8 @@ package com.xxxx.emby_tv.ui
 
 import com.xxxx.emby_tv.ui.components.BuildItem
 import coil3.compose.AsyncImage
+import coil3.SingletonImageLoader
+import coil3.request.ImageRequest
 import androidx.compose.ui.layout.ContentScale
 import com.xxxx.emby_tv.Utils
 import androidx.compose.foundation.BorderStroke
@@ -59,6 +61,9 @@ fun LibraryScreen(
 
     val repository = remember { EmbyRepository.getInstance(context) }
     val serverUrl = repository.serverUrl ?: ""
+    // Reuse the shared Coil image loader: upcoming poster requests populate
+    // its existing bounded memory/disk cache, without downloading the library.
+    val posterLoader = remember(context) { SingletonImageLoader.get(context) }
 
     val libraryItems = libraryViewModel.libraryItems
     val isLoadingMore = libraryViewModel.isLoadingMore
@@ -94,6 +99,19 @@ fun LibraryScreen(
                     gridState.scrollToItem(returnFocusIndex)
                     withFrameNanos { }
                     returnFocusRequester.requestFocus()
+                }
+            }
+        }
+    }
+
+    LaunchedEffect(selectedTitleId, libraryItems, serverUrl) {
+        val loaded = libraryItems.orEmpty()
+        if (loaded.isNotEmpty() && serverUrl.isNotBlank()) {
+            val current = loaded.indexOfFirst { it.id == selectedTitleId }.coerceAtLeast(0)
+            loaded.drop(current).take(8).forEach { item ->
+                val url = Utils.getImageUrl(serverUrl, item, false)
+                if (url.isNotBlank()) {
+                    posterLoader.enqueue(ImageRequest.Builder(context).data(url).build())
                 }
             }
         }
