@@ -1,6 +1,8 @@
 package com.xxxx.emby_tv.ui
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -212,8 +214,8 @@ fun HomeScreen(
             jembySplashShownInProcess = true
         }
     }
-    Box(modifier = Modifier.fillMaxSize()) {
-    Column(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize().background(Color(0xE90B1929))) {
+    Column(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
         // 顶部状态栏
         TopStatusBar(
             currentVersion = mainViewModel.currentVersion,
@@ -238,8 +240,9 @@ fun HomeScreen(
 //        }
         if (libraryLatestItems != null || resumeItems != null || favoriteItems != null) {
             LazyColumn(
-                modifier = Modifier.weight(1f),
-                contentPadding = PaddingValues(bottom = 40.dp)
+                modifier = Modifier.weight(1f)
+                    .background(Color(0x7518293C), RoundedCornerShape(6.dp)),
+                contentPadding = PaddingValues(bottom = 40.dp, top = 12.dp)
             ) {
                 // Show libraries only when loaded; don't hold the entire
                 // homepage behind the slowest Emby request.
