@@ -7,6 +7,7 @@ import coil3.request.ImageRequest
 import androidx.compose.ui.layout.ContentScale
 import com.xxxx.emby_tv.Utils
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
@@ -146,7 +147,8 @@ fun LibraryScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .background(Color(0xDD0D1827))
+            .padding(horizontal = 24.dp, vertical = 18.dp)
     ) {
         Row(
             modifier = Modifier
@@ -263,13 +265,14 @@ fun LibraryScreen(
             val items = libraryItems
 
             val selected = items.firstOrNull { it.id == selectedTitleId } ?: items.first()
-            Row(modifier = Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+            Row(modifier = Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(1),
                     state = gridState,
                     contentPadding = PaddingValues(vertical = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(3.dp),
                     modifier = Modifier.weight(0.85f).fillMaxHeight()
+                        .background(Color(0xBC14263A), RoundedCornerShape(5.dp))
                 ) {
                     items(items.size, key = { items[it].id ?: it.toString() }) { index ->
                         val item = items[index]
@@ -293,10 +296,10 @@ fun LibraryScreen(
                                         returnFocusIndex = index
                                     }
                                 },
-                                shape = ClickableSurfaceDefaults.shape(shape = RoundedCornerShape(7.dp)),
+                                shape = ClickableSurfaceDefaults.shape(shape = RoundedCornerShape(2.dp)),
                                 colors = ClickableSurfaceDefaults.colors(
                                     containerColor = Color.Transparent,
-                                    focusedContainerColor = MaterialTheme.colorScheme.secondary,
+                                    focusedContainerColor = Color(0xFF2776AE),
                                     contentColor = Color.White,
                                     focusedContentColor = Color.White
                                 )
@@ -321,7 +324,9 @@ fun LibraryScreen(
                     }
                 }
                 Row(
-                    modifier = Modifier.weight(1.4f).fillMaxHeight().padding(top = 12.dp),
+                    modifier = Modifier.weight(1.4f).fillMaxHeight()
+                        .background(Color(0xCC0D2234), RoundedCornerShape(5.dp))
+                        .padding(22.dp),
                     horizontalArrangement = Arrangement.spacedBy(20.dp)
                 ) {
                     AsyncImage(
