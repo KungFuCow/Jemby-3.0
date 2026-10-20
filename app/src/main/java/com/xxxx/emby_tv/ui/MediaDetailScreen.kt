@@ -54,6 +54,7 @@ fun MediaDetailScreen(
     detailViewModel: DetailViewModel,
     onNavigateToSeries: (String) -> Unit,
     onNavigateToPlayer: (BaseItemDto) -> Unit,
+    onNavigateToPerson: (String) -> Unit,
 ) {
     val context = LocalContext.current
     val repository = remember { EmbyRepository.getInstance(context) }
@@ -547,7 +548,8 @@ fun MediaDetailScreen(
                                     person = person,
                                     imgWidth = castImgWidth,
                                     aspectRatio = maxAspectRatio,
-                                    serverUrl = serverUrl
+                                    serverUrl = serverUrl,
+                                    onClick = { person.name?.let(onNavigateToPerson) }
                                 )
                             }
                         }
@@ -687,10 +689,11 @@ fun PersonCard(
     imgWidth: Dp,
     aspectRatio: Float,
     serverUrl: String,
+    onClick: () -> Unit = {},
 ) {
 
     Surface(
-        onClick = {},
+        onClick = onClick,
         shape = ClickableSurfaceDefaults.shape(shape = RoundedCornerShape(12.dp)),
         border = ClickableSurfaceDefaults.border(
             focusedBorder = Border(
