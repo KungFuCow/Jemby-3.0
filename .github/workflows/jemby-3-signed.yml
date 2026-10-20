@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - jemby-3-development
+      - feature/actor-profiles-tmdb
     paths:
       - .github/workflows/jemby-3-signed.yml
       - app/src/main/**
@@ -48,6 +49,7 @@ jobs:
       - name: Build signed release APK
         shell: bash
         env:
+          TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
           JEMBY_SIGNING_FILE: ${{ runner.temp }}/jemby3-signing.p12
           JEMBY_STORE_PASSWORD: ${{ secrets.JEMBY_STORE_PASSWORD }}
           JEMBY_KEY_ALIAS: ${{ secrets.JEMBY_KEY_ALIAS }}
