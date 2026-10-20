@@ -24,6 +24,7 @@ android {
 
     defaultConfig {
         applicationId = "com.jemby.tv3"
+        buildConfigField("String", "TMDB_API_KEY", "\\\"${System.getenv("TMDB_API_KEY") ?: ""}\\\"")
         minSdk = 23
         targetSdk = 36
         versionName = "3.0.0-test1"
