@@ -25,6 +25,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.xxxx.emby_tv.ui.AccountScreen
+import com.xxxx.emby_tv.ui.ActorProfileScreen
 import com.xxxx.emby_tv.ui.MediaDetailScreen
 import com.xxxx.emby_tv.ui.HomeScreen
 import com.xxxx.emby_tv.ui.UpdateScreen
@@ -269,6 +270,7 @@ fun EmbyTvApp() {
                             onNavigateToSeries = { nestedSeriesId ->
                                 navController.navigate("series/$nestedSeriesId")
                             },
+                            onNavigateToPerson = { name -> navController.navigate("actor/${android.net.Uri.encode(name)}") },
                             onNavigateToPlayer = { mediaItem ->
                                 val id = mediaItem.id ?: ""
                                 val position = mediaItem.userData?.playbackPositionTicks ?: 0L
@@ -291,11 +293,20 @@ fun EmbyTvApp() {
                             onNavigateToSeries = { nestedSeriesId ->
                                 navController.navigate("series/$nestedSeriesId")
                             },
+                            onNavigateToPerson = { name -> navController.navigate("actor/${android.net.Uri.encode(name)}") },
                             onNavigateToPlayer = { mediaItem ->
                                 val id = mediaItem.id ?: ""
                                 val position = mediaItem.userData?.playbackPositionTicks ?: 0L
                                 navController.navigate("player/$id?position=$position")
                             }
+                        )
+                    }
+
+                    composable("actor/{name}", arguments = listOf(navArgument("name") { type = NavType.StringType })) { entry ->
+                        ActorProfileScreen(
+                            name = android.net.Uri.decode(entry.arguments?.getString("name") ?: ""),
+                            onOpenItem = { id, isSeries -> navController.navigate("${if (isSeries) "series" else "media"}/$id") },
+                            onBack = { navController.popBackStack() }
                         )
                     }
 
